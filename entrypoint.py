@@ -416,7 +416,7 @@ def main():
     df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].infer_objects(copy=False).fillna(0)
 
     df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
-    df_orders_kvt_area_res['kvt'] = df_orders_kvt_area_res['kvt'] / 2
+    # df_orders_kvt_area_res['kvt'] = df_orders_kvt_area_res['kvt'] / 2
 
     # Загрузка свежих данных в t_area_revenue_stats2
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
