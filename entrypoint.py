@@ -213,8 +213,8 @@ def main():
         .rename(columns={'id': 'kvt'}) \
         .reset_index() \
         # .fillna(0)
-    df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0)
-    df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0')
+    df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0).astype(int)
+    df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0').astype(str)
 
     # Выгрузка заказов
     select_orders = '''
@@ -253,8 +253,8 @@ def main():
                          'subscription_price_x': 'abon'}) \
         .reset_index() \
         # .fillna(0)
-    df_orders_areas_res['area_id'] = df_orders_areas_res['area_id'].fillna(0)
-    df_orders_areas_res['area_name'] = df_orders_areas_res['area_name'].fillna('0')
+    df_orders_areas_res['area_id'] = df_orders_areas_res['area_id'].fillna(0).astype(int)
+    df_orders_areas_res['area_name'] = df_orders_areas_res['area_name'].fillna('0').astype(str)
 
     # Выгрузка показателей для распределения
     select_distr = '''
@@ -406,14 +406,14 @@ def main():
                          'vyruchka_s_abonementov_res': 'vyruchka_s_abonementov',
                          'sum_mnogor_abon_res': 'sum_mnogor_abon'}) \
         # .fillna(0)
-    df_orders_kvt_area_res['poezdok'] = df_orders_kvt_area_res['poezdok'].fillna(0)
-    df_orders_kvt_area_res['obzchaya_stoimost'] = df_orders_kvt_area_res['obzchaya_stoimost'].fillna(0)
-    df_orders_kvt_area_res['oplacheno_bonusami'] = df_orders_kvt_area_res['oplacheno_bonusami'].fillna(0)
-    df_orders_kvt_area_res['skidka'] = df_orders_kvt_area_res['skidka'].fillna(0)
-    df_orders_kvt_area_res['abon'] = df_orders_kvt_area_res['abon'].fillna(0)
-    df_orders_kvt_area_res['dolgi'] = df_orders_kvt_area_res['dolgi'].fillna(0)
-    df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].fillna(0)
-    df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].fillna(0)
+    df_orders_kvt_area_res['poezdok'] = df_orders_kvt_area_res['poezdok'].fillna(0).astype(float)
+    df_orders_kvt_area_res['obzchaya_stoimost'] = df_orders_kvt_area_res['obzchaya_stoimost'].fillna(0).astype(float)
+    df_orders_kvt_area_res['oplacheno_bonusami'] = df_orders_kvt_area_res['oplacheno_bonusami'].fillna(0).astype(float)
+    df_orders_kvt_area_res['skidka'] = df_orders_kvt_area_res['skidka'].fillna(0).astype(float)
+    df_orders_kvt_area_res['abon'] = df_orders_kvt_area_res['abon'].fillna(0).astype(float)
+    df_orders_kvt_area_res['dolgi'] = df_orders_kvt_area_res['dolgi'].fillna(0).astype(float)
+    df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].fillna(0).astype(float)
+    df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].fillna(0).astype(float)
 
     # Загрузка свежих данных в t_area_revenue_stats2
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
