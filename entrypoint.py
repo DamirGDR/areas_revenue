@@ -415,6 +415,8 @@ def main():
     df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].infer_objects(copy=False).fillna(0)
     df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].infer_objects(copy=False).fillna(0)
 
+    df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
+
     # Загрузка свежих данных в t_area_revenue_stats2
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_area_revenue_stats2 успешно обновлена!')
