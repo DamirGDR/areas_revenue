@@ -212,7 +212,7 @@ def main():
         .agg({'id': 'count'}) \
         .rename(columns={'id': 'kvt'}) \
         .reset_index() \
-        .fillna(0)
+        # .fillna(0)
 
     # Выгрузка заказов
     select_orders = '''
@@ -250,7 +250,7 @@ def main():
                          'bike_discount_amount_x': 'skidka',
                          'subscription_price_x': 'abon'}) \
         .reset_index() \
-        .fillna(0)
+        # .fillna(0)
 
     # Выгрузка показателей для распределения
     select_distr = '''
@@ -401,7 +401,7 @@ def main():
         .rename(columns={'dolgi_res': 'dolgi',
                          'vyruchka_s_abonementov_res': 'vyruchka_s_abonementov',
                          'sum_mnogor_abon_res': 'sum_mnogor_abon'}) \
-        .fillna(0)
+        # .fillna(0)
 
     # Загрузка свежих данных в t_area_revenue_stats2
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
