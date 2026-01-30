@@ -411,9 +411,9 @@ def main():
     df_orders_kvt_area_res['oplacheno_bonusami'] = df_orders_kvt_area_res['oplacheno_bonusami'].fillna(0).astype(float)
     df_orders_kvt_area_res['skidka'] = df_orders_kvt_area_res['skidka'].fillna(0).astype(float)
     df_orders_kvt_area_res['abon'] = df_orders_kvt_area_res['abon'].fillna(0).astype(float)
-    df_orders_kvt_area_res['dolgi'] = df_orders_kvt_area_res['dolgi'].fillna(0).infer_objects(copy=False)
-    df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].fillna(0).astype(float).infer_objects(copy=False)
-    df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].fillna(0).astype(float).infer_objects(copy=False)
+    df_orders_kvt_area_res['dolgi'] = df_orders_kvt_area_res['dolgi'].infer_objects(copy=False).fillna(0)
+    df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].infer_objects(copy=False).fillna(0)
+    df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].infer_objects(copy=False).fillna(0)
 
     # Загрузка свежих данных в t_area_revenue_stats2
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
