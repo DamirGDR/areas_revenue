@@ -1,0 +1,21 @@
+[project]
+name = "vni-total"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mysql-connector-python>=9.3.0",
+    "pandas>=2.3.0",
+    "numpy==1.26.4",
+    "psycopg[binary,pool]>=3.2.9",
+    "sqlalchemy>=2.0.41",
+    "google-api-python-client==2.144.0",
+    "google-auth-oauthlib==1.2.1",
+    "google-cloud-iam==2.15.2",
+    "gspread==5.4.0",
+    "packaging",
+    "datetime",
+    "polyline==2.0.2",
+    "shapely==2.0.6"
+]
