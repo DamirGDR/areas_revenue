@@ -429,6 +429,16 @@ def main():
 
 
     # t_temp
+    truncate_t_area_revenue_stats2 = '''
+    DELETE FROM damir.t_temp
+    WHERE damir.t_temp."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours';
+    '''
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            connection.execute(sa.text(truncate_t_area_revenue_stats2))
+            transaction.commit()
+            print(f"Таблица t_temp успешно очищена!")
+    
     select_kvt = '''
         SELECT 
             res_tab."timestamp" ,
