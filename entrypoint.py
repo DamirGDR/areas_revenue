@@ -456,7 +456,7 @@ def main():
     '''
     df_kvt = pd.read_sql(select_kvt, engine_postgresql)
     print('select_kvt' + str(df_kvt['timestamp_hour'].unique()))
-    x = df_kvt_area_res.groupby('timestamp_hour').agg({'kvt': 'sum'})
+    x = df_kvt.groupby('timestamp_hour').agg({'kvt': 'sum'})
     print('kvt1' + str(x))
     # Выгрузка areas
     select_areas = '''
