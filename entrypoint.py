@@ -147,285 +147,285 @@ def main():
     engine_postgresql = sa.create_engine(url)
 
 
-    # Выгрузка t_area_revenue_stats2 pandas. Начало
-    # Очистка старых данных t_area_revenue_stats2
-    truncate_t_area_revenue_stats2 = '''
-    DELETE FROM damir.t_area_revenue_stats2
-    WHERE damir.t_area_revenue_stats2."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours';
-    '''
-    with engine_postgresql.connect() as connection:
-        with connection.begin() as transaction:
-            connection.execute(sa.text(truncate_t_area_revenue_stats2))
-            transaction.commit()
-            print(f"Таблица t_area_revenue_stats2 успешно очищена!")
+    # # Выгрузка t_area_revenue_stats2 pandas. Начало
+    # # Очистка старых данных t_area_revenue_stats2
+    # truncate_t_area_revenue_stats2 = '''
+    # DELETE FROM damir.t_area_revenue_stats2
+    # WHERE damir.t_area_revenue_stats2."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours';
+    # '''
+    # with engine_postgresql.connect() as connection:
+    #     with connection.begin() as transaction:
+    #         connection.execute(sa.text(truncate_t_area_revenue_stats2))
+    #         transaction.commit()
+    #         print(f"Таблица t_area_revenue_stats2 успешно очищена!")
 
-    # КВТ
-    select_kvt = '''
-        SELECT 
-            res_tab."timestamp" ,
-            res_tab.timestamp_hour ,
-            res_tab.id ,
-            res_tab.city_id ,
-            res_tab.g_lat ,
-            res_tab.g_lng
-        FROM 
-        (
-            SELECT 
-                tbh."timestamp" ,
-                date_trunc('hour', tbh."timestamp") AS "timestamp_hour" ,
-                tbh.id ,
-                tbh.g_lat ,
-                tbh.g_lng ,
-                tb.city_id ,
-                RANK() OVER (PARTITION BY date_trunc('hour', tbh."timestamp") ORDER BY tbh."timestamp" DESC) AS rn
-            FROM damir.t_bike_history tbh
-            LEFT JOIN damir.t_bike tb ON tbh.id = tb.id 
-            WHERE tbh.error_status IN (0,7)
-                AND tbh."timestamp" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-            ) AS res_tab
-        WHERE res_tab.rn = 1
-    '''
-    df_kvt = pd.read_sql(select_kvt, engine_postgresql)
+    # # КВТ
+    # select_kvt = '''
+    #     SELECT 
+    #         res_tab."timestamp" ,
+    #         res_tab.timestamp_hour ,
+    #         res_tab.id ,
+    #         res_tab.city_id ,
+    #         res_tab.g_lat ,
+    #         res_tab.g_lng
+    #     FROM 
+    #     (
+    #         SELECT 
+    #             tbh."timestamp" ,
+    #             date_trunc('hour', tbh."timestamp") AS "timestamp_hour" ,
+    #             tbh.id ,
+    #             tbh.g_lat ,
+    #             tbh.g_lng ,
+    #             tb.city_id ,
+    #             RANK() OVER (PARTITION BY date_trunc('hour', tbh."timestamp") ORDER BY tbh."timestamp" DESC) AS rn
+    #         FROM damir.t_bike_history tbh
+    #         LEFT JOIN damir.t_bike tb ON tbh.id = tb.id 
+    #         WHERE tbh.error_status IN (0,7)
+    #             AND tbh."timestamp" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    #         ) AS res_tab
+    #     WHERE res_tab.rn = 1
+    # '''
+    # df_kvt = pd.read_sql(select_kvt, engine_postgresql)
 
-    # Выгрузка areas
-    select_areas = '''
-        SELECT
-            ta.city_id ,
-            ta.id AS area_id ,
-            ta."name" AS area_name ,
-            ta.detail AS area_detail
-        FROM damir.t_area ta
-        WHERE ta."name" LIKE '%%| Area |%%'
-    '''
-    df_areas = pd.read_sql(select_areas, engine_postgresql)
+    # # Выгрузка areas
+    # select_areas = '''
+    #     SELECT
+    #         ta.city_id ,
+    #         ta.id AS area_id ,
+    #         ta."name" AS area_name ,
+    #         ta.detail AS area_detail
+    #     FROM damir.t_area ta
+    #     WHERE ta."name" LIKE '%%| Area |%%'
+    # '''
+    # df_areas = pd.read_sql(select_areas, engine_postgresql)
 
-    # area в полигоны
-    df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
+    # # area в полигоны
+    # df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
 
-    # Соединяю КВТ и area
-    df_kvt_area = df_kvt.merge(df_areas, how='cross')
-    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
-    df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
-    df_kvt_area_res = df_kvt.merge(df_kvt_area_res, how='left', on=['timestamp_hour', 'id'])
-    df_kvt_area_res = df_kvt_area_res[['timestamp_hour', 'id', 'city_id', 'city_id_y', 'area_id', 'area_name']]
-    df_kvt_area_res = df_kvt_area_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name'], dropna=False) \
-        .agg({'id': 'count'}) \
-        .rename(columns={'id': 'kvt'}) \
-        .reset_index() \
-        # .fillna(0)
-    df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0).astype(int)
-    df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0').astype(str)
+    # # Соединяю КВТ и area
+    # df_kvt_area = df_kvt.merge(df_areas, how='cross')
+    # df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
+    # df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
+    # df_kvt_area_res = df_kvt.merge(df_kvt_area_res, how='left', on=['timestamp_hour', 'id'])
+    # df_kvt_area_res = df_kvt_area_res[['timestamp_hour', 'id', 'city_id', 'city_id_y', 'area_id', 'area_name']]
+    # df_kvt_area_res = df_kvt_area_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name'], dropna=False) \
+    #     .agg({'id': 'count'}) \
+    #     .rename(columns={'id': 'kvt'}) \
+    #     .reset_index() \
+    #     # .fillna(0)
+    # df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0).astype(int)
+    # df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0').astype(str)
 
-    # Выгрузка заказов
-    select_orders = '''
-        SELECT 
-            date_trunc('hour', tor."timestamp") AS timestamp_hour ,
-            tor.id ,
-            tb.city_id ,
-            tor.start_lat ,
-            tor.start_lng ,
-            tor.ride_amount ,
-            tor.discount ,
-            tor.bike_discount_amount ,
-            tor.subscription_price 
-        FROM damir.t_orders_revenue tor 
-        LEFT JOIN damir.t_bike tb ON tor.bid = tb.id
-        WHERE tor."timestamp" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-    '''
-    df_orders = pd.read_sql(select_orders, engine_postgresql)
+    # # Выгрузка заказов
+    # select_orders = '''
+    #     SELECT 
+    #         date_trunc('hour', tor."timestamp") AS timestamp_hour ,
+    #         tor.id ,
+    #         tb.city_id ,
+    #         tor.start_lat ,
+    #         tor.start_lng ,
+    #         tor.ride_amount ,
+    #         tor.discount ,
+    #         tor.bike_discount_amount ,
+    #         tor.subscription_price 
+    #     FROM damir.t_orders_revenue tor 
+    #     LEFT JOIN damir.t_bike tb ON tor.bid = tb.id
+    #     WHERE tor."timestamp" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    # '''
+    # df_orders = pd.read_sql(select_orders, engine_postgresql)
 
-    # Соединяю orders и area
-    df_orders_area = df_orders.merge(df_areas, how='cross')
-    df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1)
-    df_orders_area = df_orders_area[df_orders_area['res'] == True]
-    df_orders_areas_res = df_orders.merge(df_orders_area, on=['timestamp_hour', 'id'], how='left')
-    df_orders_areas_res = df_orders_areas_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name'],
-                                                      dropna=False) \
-        .agg({'id': 'count',
-              'ride_amount_x': 'sum',
-              'discount_x': 'sum',
-              'bike_discount_amount_x': 'sum',
-              'subscription_price_x': 'sum'}) \
-        .rename(columns={'id': 'poezdok',
-                         'ride_amount_x': 'obzchaya_stoimost',
-                         'discount_x': 'oplacheno_bonusami',
-                         'bike_discount_amount_x': 'skidka',
-                         'subscription_price_x': 'abon'}) \
-        .reset_index() \
-        # .fillna(0)
-    df_orders_areas_res['area_id'] = df_orders_areas_res['area_id'].fillna(0).astype(int)
-    df_orders_areas_res['area_name'] = df_orders_areas_res['area_name'].fillna('0').astype(str)
+    # # Соединяю orders и area
+    # df_orders_area = df_orders.merge(df_areas, how='cross')
+    # df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1)
+    # df_orders_area = df_orders_area[df_orders_area['res'] == True]
+    # df_orders_areas_res = df_orders.merge(df_orders_area, on=['timestamp_hour', 'id'], how='left')
+    # df_orders_areas_res = df_orders_areas_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name'],
+    #                                                   dropna=False) \
+    #     .agg({'id': 'count',
+    #           'ride_amount_x': 'sum',
+    #           'discount_x': 'sum',
+    #           'bike_discount_amount_x': 'sum',
+    #           'subscription_price_x': 'sum'}) \
+    #     .rename(columns={'id': 'poezdok',
+    #                      'ride_amount_x': 'obzchaya_stoimost',
+    #                      'discount_x': 'oplacheno_bonusami',
+    #                      'bike_discount_amount_x': 'skidka',
+    #                      'subscription_price_x': 'abon'}) \
+    #     .reset_index() \
+    #     # .fillna(0)
+    # df_orders_areas_res['area_id'] = df_orders_areas_res['area_id'].fillna(0).astype(int)
+    # df_orders_areas_res['area_name'] = df_orders_areas_res['area_name'].fillna('0').astype(str)
 
-    # Выгрузка показателей для распределения
-    select_distr = '''
-        WITH dolgi AS (
-            SELECT
-                dolgi.city_id ,
-                SUM(dolgi.debit_cash) AS dolgi
-            FROM 
-            (
-                SELECT
-                    dolgi.city_id ,
-                    tpd.debit_cash
-                FROM damir.t_payment_details tpd 
-                RIGHT JOIN (
-                    SELECT 
-                        tbu."date" ,
-                        tbu.id,
-                        tbu.uid,
-                        tbu.bid ,
-                        tb.city_id ,
-                        tbu.ride_amount 
-                    FROM damir.t_bike_use tbu
-                    LEFT JOIN t_bike tb ON tbu.bid = tb.id
-                    WHERE tbu.ride_status = 2 
-                        AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                        --AND to_timestamp( tbu.start_time) >= '2025-12-18'::date
-                    ) AS dolgi ON tpd.ride_id = dolgi.id 
-                ) AS dolgi
-            GROUP BY dolgi.city_id
-        ),
-        vyruchka_s_abonementov AS (
-            SELECT 
-                distr_poezdki_po_gorodam.city_id,
-                sum_uspeh_abon.vyruchka_s_abonementov * distr_poezdki_po_gorodam.coef_goroda AS vyruchka_s_abonementov
-            FROM (
-                -- высчитываю пропорции по поездкам
-                SELECT 
-                    distr_poezdki_po_gorodam.start_time,
-                    distr_poezdki_po_gorodam.city_id,
-                    distr_poezdki_po_gorodam.poezdok,
-                    -- Приведение к numeric важно, чтобы результат деления не был 0
-                    distr_poezdki_po_gorodam.poezdok::numeric / SUM(distr_poezdki_po_gorodam.poezdok) OVER (PARTITION BY distr_poezdki_po_gorodam.start_time) AS coef_goroda
-                FROM 
-                    (
-                    SELECT 
-                        TO_CHAR(TO_TIMESTAMP(t_bike_use.start_time), 'YYYY-MM-DD') AS start_time,
-                        t_bike.city_id,
-                        COUNT(t_bike_use.ride_amount) AS poezdok
-                    FROM damir.t_bike_use
-                    LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
-                    WHERE t_bike_use.ride_status != 5 
-                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                        --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
-                    GROUP BY 1, 2
-                    ) 
-                    AS distr_poezdki_po_gorodam
-            ) AS distr_poezdki_po_gorodam
-            LEFT JOIN (
-                SELECT 
-                    TO_CHAR(t_trade.date, 'YYYY-MM-DD') AS start_time,
-                    SUM(COALESCE(t_trade.amount, 0)) AS vyruchka_s_abonementov
-                FROM damir.t_trade
-                WHERE t_trade.type = 6 
-                    AND t_trade.status = 1 
-                    AND t_trade.date >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                    --AND t_trade.date >= '2025-12-18'::date
-                GROUP BY 1
-                ) AS sum_uspeh_abon
-                ON distr_poezdki_po_gorodam.start_time = sum_uspeh_abon.start_time
-        ),
-        sum_mnogor_abon AS (
-            SELECT 
-                distr_poezdki_po_gorodam.city_id,
-                sum_mnogor_abon.sum_mnogor_abon * distr_poezdki_po_gorodam.coef_goroda AS sum_mnogor_abon
-            FROM (
-                -- высчитываю пропорции по поездкам
-                SELECT 
-                    dp.start_time,
-                    dp.city_id,
-                    dp.poezdok,
-                    dp.poezdok::numeric / NULLIF(SUM(COALESCE(dp.poezdok, 0)) OVER (PARTITION BY dp.start_time), 0) AS coef_goroda
-                FROM (
-                    SELECT 
-                        TO_CHAR(TO_TIMESTAMP(t_bike_use.start_time), 'YYYY-MM-DD') AS start_time,
-                        t_bike.city_id,
-                        COUNT(t_bike_use.ride_amount) AS poezdok
-                    FROM damir.t_bike_use
-                    LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
-                    WHERE t_bike_use.ride_status != 5 
-                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                        --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
-                    GROUP BY 1, 2
-                ) AS dp
-            ) AS distr_poezdki_po_gorodam
-            LEFT JOIN (
-                SELECT 
-                    TO_CHAR(t_subscription_mapping.start_time, 'YYYY-MM-DD') AS start_time,
-                    SUM(COALESCE(t_subscription.price, 0)) AS sum_mnogor_abon
-                FROM damir.t_subscription_mapping
-                LEFT JOIN damir.t_subscription ON t_subscription_mapping.subscription_id = t_subscription.id
-                WHERE 
-                    t_subscription_mapping.start_time >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                    --t_subscription_mapping.start_time >= '2025-12-18'::date 
-                GROUP BY 1
-            ) AS sum_mnogor_abon
-            ON distr_poezdki_po_gorodam.start_time = sum_mnogor_abon.start_time
-        )
-        SELECT 
-            COALESCE(dolgi.city_id , vyruchka_s_abonementov.city_id , sum_mnogor_abon.city_id ) AS city_id,
-            COALESCE(dolgi.dolgi, 0) AS dolgi,
-            vyruchka_s_abonementov.vyruchka_s_abonementov ,
-            sum_mnogor_abon.sum_mnogor_abon
-        FROM dolgi
-        FULL JOIN vyruchka_s_abonementov ON dolgi.city_id = vyruchka_s_abonementov.city_id 
-        FULL JOIN sum_mnogor_abon ON COALESCE(dolgi.city_id , vyruchka_s_abonementov.city_id ) = sum_mnogor_abon.city_id 
-    '''
-    df_distr = pd.read_sql(select_distr, engine_postgresql)
+    # # Выгрузка показателей для распределения
+    # select_distr = '''
+    #     WITH dolgi AS (
+    #         SELECT
+    #             dolgi.city_id ,
+    #             SUM(dolgi.debit_cash) AS dolgi
+    #         FROM 
+    #         (
+    #             SELECT
+    #                 dolgi.city_id ,
+    #                 tpd.debit_cash
+    #             FROM damir.t_payment_details tpd 
+    #             RIGHT JOIN (
+    #                 SELECT 
+    #                     tbu."date" ,
+    #                     tbu.id,
+    #                     tbu.uid,
+    #                     tbu.bid ,
+    #                     tb.city_id ,
+    #                     tbu.ride_amount 
+    #                 FROM damir.t_bike_use tbu
+    #                 LEFT JOIN t_bike tb ON tbu.bid = tb.id
+    #                 WHERE tbu.ride_status = 2 
+    #                     AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    #                     --AND to_timestamp( tbu.start_time) >= '2025-12-18'::date
+    #                 ) AS dolgi ON tpd.ride_id = dolgi.id 
+    #             ) AS dolgi
+    #         GROUP BY dolgi.city_id
+    #     ),
+    #     vyruchka_s_abonementov AS (
+    #         SELECT 
+    #             distr_poezdki_po_gorodam.city_id,
+    #             sum_uspeh_abon.vyruchka_s_abonementov * distr_poezdki_po_gorodam.coef_goroda AS vyruchka_s_abonementov
+    #         FROM (
+    #             -- высчитываю пропорции по поездкам
+    #             SELECT 
+    #                 distr_poezdki_po_gorodam.start_time,
+    #                 distr_poezdki_po_gorodam.city_id,
+    #                 distr_poezdki_po_gorodam.poezdok,
+    #                 -- Приведение к numeric важно, чтобы результат деления не был 0
+    #                 distr_poezdki_po_gorodam.poezdok::numeric / SUM(distr_poezdki_po_gorodam.poezdok) OVER (PARTITION BY distr_poezdki_po_gorodam.start_time) AS coef_goroda
+    #             FROM 
+    #                 (
+    #                 SELECT 
+    #                     TO_CHAR(TO_TIMESTAMP(t_bike_use.start_time), 'YYYY-MM-DD') AS start_time,
+    #                     t_bike.city_id,
+    #                     COUNT(t_bike_use.ride_amount) AS poezdok
+    #                 FROM damir.t_bike_use
+    #                 LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
+    #                 WHERE t_bike_use.ride_status != 5 
+    #                     AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    #                     --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
+    #                 GROUP BY 1, 2
+    #                 ) 
+    #                 AS distr_poezdki_po_gorodam
+    #         ) AS distr_poezdki_po_gorodam
+    #         LEFT JOIN (
+    #             SELECT 
+    #                 TO_CHAR(t_trade.date, 'YYYY-MM-DD') AS start_time,
+    #                 SUM(COALESCE(t_trade.amount, 0)) AS vyruchka_s_abonementov
+    #             FROM damir.t_trade
+    #             WHERE t_trade.type = 6 
+    #                 AND t_trade.status = 1 
+    #                 AND t_trade.date >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    #                 --AND t_trade.date >= '2025-12-18'::date
+    #             GROUP BY 1
+    #             ) AS sum_uspeh_abon
+    #             ON distr_poezdki_po_gorodam.start_time = sum_uspeh_abon.start_time
+    #     ),
+    #     sum_mnogor_abon AS (
+    #         SELECT 
+    #             distr_poezdki_po_gorodam.city_id,
+    #             sum_mnogor_abon.sum_mnogor_abon * distr_poezdki_po_gorodam.coef_goroda AS sum_mnogor_abon
+    #         FROM (
+    #             -- высчитываю пропорции по поездкам
+    #             SELECT 
+    #                 dp.start_time,
+    #                 dp.city_id,
+    #                 dp.poezdok,
+    #                 dp.poezdok::numeric / NULLIF(SUM(COALESCE(dp.poezdok, 0)) OVER (PARTITION BY dp.start_time), 0) AS coef_goroda
+    #             FROM (
+    #                 SELECT 
+    #                     TO_CHAR(TO_TIMESTAMP(t_bike_use.start_time), 'YYYY-MM-DD') AS start_time,
+    #                     t_bike.city_id,
+    #                     COUNT(t_bike_use.ride_amount) AS poezdok
+    #                 FROM damir.t_bike_use
+    #                 LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
+    #                 WHERE t_bike_use.ride_status != 5 
+    #                     AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    #                     --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
+    #                 GROUP BY 1, 2
+    #             ) AS dp
+    #         ) AS distr_poezdki_po_gorodam
+    #         LEFT JOIN (
+    #             SELECT 
+    #                 TO_CHAR(t_subscription_mapping.start_time, 'YYYY-MM-DD') AS start_time,
+    #                 SUM(COALESCE(t_subscription.price, 0)) AS sum_mnogor_abon
+    #             FROM damir.t_subscription_mapping
+    #             LEFT JOIN damir.t_subscription ON t_subscription_mapping.subscription_id = t_subscription.id
+    #             WHERE 
+    #                 t_subscription_mapping.start_time >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+    #                 --t_subscription_mapping.start_time >= '2025-12-18'::date 
+    #             GROUP BY 1
+    #         ) AS sum_mnogor_abon
+    #         ON distr_poezdki_po_gorodam.start_time = sum_mnogor_abon.start_time
+    #     )
+    #     SELECT 
+    #         COALESCE(dolgi.city_id , vyruchka_s_abonementov.city_id , sum_mnogor_abon.city_id ) AS city_id,
+    #         COALESCE(dolgi.dolgi, 0) AS dolgi,
+    #         vyruchka_s_abonementov.vyruchka_s_abonementov ,
+    #         sum_mnogor_abon.sum_mnogor_abon
+    #     FROM dolgi
+    #     FULL JOIN vyruchka_s_abonementov ON dolgi.city_id = vyruchka_s_abonementov.city_id 
+    #     FULL JOIN sum_mnogor_abon ON COALESCE(dolgi.city_id , vyruchka_s_abonementov.city_id ) = sum_mnogor_abon.city_id 
+    # '''
+    # df_distr = pd.read_sql(select_distr, engine_postgresql)
 
-    # Соединяю основную таблицу с таблицей distr
-    df_orders_areas_res = df_orders_areas_res.merge(df_distr, how='left', on='city_id')
-    df_orders_areas_res = df_orders_areas_res.assign(
-        cum_poezdok=df_orders_areas_res.groupby('city_id')['poezdok'].transform('sum'))
-    df_orders_areas_res['dolgi_res'] = df_orders_areas_res['dolgi'] * df_orders_areas_res['poezdok'] / \
-                                       df_orders_areas_res['cum_poezdok']
-    df_orders_areas_res['vyruchka_s_abonementov_res'] = df_orders_areas_res['vyruchka_s_abonementov'] * \
-                                                        df_orders_areas_res['poezdok'] / df_orders_areas_res[
-                                                            'cum_poezdok']
-    df_orders_areas_res['sum_mnogor_abon_res'] = df_orders_areas_res['sum_mnogor_abon'] * df_orders_areas_res[
-        'poezdok'] / df_orders_areas_res['cum_poezdok']
+    # # Соединяю основную таблицу с таблицей distr
+    # df_orders_areas_res = df_orders_areas_res.merge(df_distr, how='left', on='city_id')
+    # df_orders_areas_res = df_orders_areas_res.assign(
+    #     cum_poezdok=df_orders_areas_res.groupby('city_id')['poezdok'].transform('sum'))
+    # df_orders_areas_res['dolgi_res'] = df_orders_areas_res['dolgi'] * df_orders_areas_res['poezdok'] / \
+    #                                    df_orders_areas_res['cum_poezdok']
+    # df_orders_areas_res['vyruchka_s_abonementov_res'] = df_orders_areas_res['vyruchka_s_abonementov'] * \
+    #                                                     df_orders_areas_res['poezdok'] / df_orders_areas_res[
+    #                                                         'cum_poezdok']
+    # df_orders_areas_res['sum_mnogor_abon_res'] = df_orders_areas_res['sum_mnogor_abon'] * df_orders_areas_res[
+    #     'poezdok'] / df_orders_areas_res['cum_poezdok']
 
-    # Соединяю КВТ и orders
-    df_orders_kvt_area_res = df_kvt_area_res.merge(df_orders_areas_res, how='inner',
-                                                   on=['timestamp_hour', 'city_id', 'area_id', 'area_name'])
-    df_orders_kvt_area_res = df_orders_kvt_area_res[['timestamp_hour',
-                                                     'city_id',
-                                                     'area_id',
-                                                     'area_name',
-                                                     'kvt',
-                                                     'poezdok',
-                                                     'obzchaya_stoimost',
-                                                     'oplacheno_bonusami',
-                                                     'skidka',
-                                                     'abon',
-                                                     'dolgi_res',
-                                                     'vyruchka_s_abonementov_res',
-                                                     'sum_mnogor_abon_res']]
-    df_orders_kvt_area_res = df_orders_kvt_area_res \
-        .rename(columns={'dolgi_res': 'dolgi',
-                         'vyruchka_s_abonementov_res': 'vyruchka_s_abonementov',
-                         'sum_mnogor_abon_res': 'sum_mnogor_abon'}) \
-        # .fillna(0)
-    df_orders_kvt_area_res['poezdok'] = df_orders_kvt_area_res['poezdok'].fillna(0).astype(float)
-    df_orders_kvt_area_res['obzchaya_stoimost'] = df_orders_kvt_area_res['obzchaya_stoimost'].fillna(0).astype(float)
-    df_orders_kvt_area_res['oplacheno_bonusami'] = df_orders_kvt_area_res['oplacheno_bonusami'].fillna(0).astype(float)
-    df_orders_kvt_area_res['skidka'] = df_orders_kvt_area_res['skidka'].fillna(0).astype(float)
-    df_orders_kvt_area_res['abon'] = df_orders_kvt_area_res['abon'].fillna(0).astype(float)
-    df_orders_kvt_area_res['dolgi'] = df_orders_kvt_area_res['dolgi'].infer_objects(copy=False).fillna(0)
-    df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].infer_objects(copy=False).fillna(0)
-    df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].infer_objects(copy=False).fillna(0)
+    # # Соединяю КВТ и orders
+    # df_orders_kvt_area_res = df_kvt_area_res.merge(df_orders_areas_res, how='inner',
+    #                                                on=['timestamp_hour', 'city_id', 'area_id', 'area_name'])
+    # df_orders_kvt_area_res = df_orders_kvt_area_res[['timestamp_hour',
+    #                                                  'city_id',
+    #                                                  'area_id',
+    #                                                  'area_name',
+    #                                                  'kvt',
+    #                                                  'poezdok',
+    #                                                  'obzchaya_stoimost',
+    #                                                  'oplacheno_bonusami',
+    #                                                  'skidka',
+    #                                                  'abon',
+    #                                                  'dolgi_res',
+    #                                                  'vyruchka_s_abonementov_res',
+    #                                                  'sum_mnogor_abon_res']]
+    # df_orders_kvt_area_res = df_orders_kvt_area_res \
+    #     .rename(columns={'dolgi_res': 'dolgi',
+    #                      'vyruchka_s_abonementov_res': 'vyruchka_s_abonementov',
+    #                      'sum_mnogor_abon_res': 'sum_mnogor_abon'}) \
+    #     # .fillna(0)
+    # df_orders_kvt_area_res['poezdok'] = df_orders_kvt_area_res['poezdok'].fillna(0).astype(float)
+    # df_orders_kvt_area_res['obzchaya_stoimost'] = df_orders_kvt_area_res['obzchaya_stoimost'].fillna(0).astype(float)
+    # df_orders_kvt_area_res['oplacheno_bonusami'] = df_orders_kvt_area_res['oplacheno_bonusami'].fillna(0).astype(float)
+    # df_orders_kvt_area_res['skidka'] = df_orders_kvt_area_res['skidka'].fillna(0).astype(float)
+    # df_orders_kvt_area_res['abon'] = df_orders_kvt_area_res['abon'].fillna(0).astype(float)
+    # df_orders_kvt_area_res['dolgi'] = df_orders_kvt_area_res['dolgi'].infer_objects(copy=False).fillna(0)
+    # df_orders_kvt_area_res['vyruchka_s_abonementov'] = df_orders_kvt_area_res['vyruchka_s_abonementov'].infer_objects(copy=False).fillna(0)
+    # df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].infer_objects(copy=False).fillna(0)
 
-    df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
-    # df_orders_kvt_area_res['kvt'] = df_orders_kvt_area_res['kvt'] / 2
+    # df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
+    # # df_orders_kvt_area_res['kvt'] = df_orders_kvt_area_res['kvt'] / 2
 
-    # Загрузка свежих данных в t_area_revenue_stats2
-    df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
-    print('Таблица t_area_revenue_stats2 успешно обновлена!')
-
-
+    # # Загрузка свежих данных в t_area_revenue_stats2
+    # df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
+    # print('Таблица t_area_revenue_stats2 успешно обновлена!')
 
 
-    # Выгрузка t_area_revenue_stats2 pandas. Конец
+
+
+    # # Выгрузка t_area_revenue_stats2 pandas. Конец
 
 
     # t_temp
