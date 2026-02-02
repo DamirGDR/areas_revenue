@@ -669,7 +669,7 @@ def main():
         'poezdok'] / df_orders_areas_res['cum_poezdok']
 
     # Соединяю КВТ и orders
-    df_orders_kvt_area_res = df_kvt_area_res.merge(df_orders_areas_res, how='outer',
+    df_orders_kvt_area_res = df_kvt_area_res.merge(df_orders_areas_res, how='inner',
                                                    on=['timestamp_hour', 'city_id', 'area_id', 'area_name'])
     df_orders_kvt_area_res = df_orders_kvt_area_res[['timestamp_hour',
                                                      'city_id',
