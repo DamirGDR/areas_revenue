@@ -743,11 +743,78 @@ def main():
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats3", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_area_revenue_stats3 успешно обновлена!')
 
-
-
-
     # Выгрузка t_area_revenue_stats3 pandas. Конец
 
+    # Выгрузка t_last_kvt pandas. Начало
+    # Копирую t_last_kvt
+    select_t_last_kvt = '''
+        WITH kvt AS (
+            SELECT 
+                res.city_id ,
+                res.parking_id ,
+                res."name" AS parking_name ,
+                COUNT(res.id) AS kvt
+            FROM 
+            (
+                SELECT 
+                    tb.city_id ,
+                    tb.id ,
+                    tb.g_lat ,
+                    tb.g_lng ,
+                    ta.id AS parking_id ,
+                    ta."name" ,
+                    ta.lat ,
+                    ta.lng ,
+                    RANK() OVER (PARTITION BY tb.id ORDER BY 6371000 * acos(
+                                                                            cos(radians(tb.g_lat)) * 
+                                                                            cos(radians(ta.lat)) * 
+                                                                            cos(radians(ta.lng) - radians(tb.g_lng)) + 
+                                                                            sin(radians(tb.g_lat)) * 
+                                                                            sin(radians(ta.lat))) ASC) AS rn
+                FROM damir.t_bike tb 
+                CROSS JOIN damir.t_area ta
+                WHERE tb.error_status IN (0,7)
+                    AND ta.active = 1
+                ) AS res
+            WHERE res.rn = 1
+            GROUP BY res.city_id , res.parking_id , res."name"
+        ),
+        parking_all AS (
+            SELECT 
+                ta.city_id ,
+                ta.id AS parking_id ,
+                ta."name" AS parking_name
+            FROM damir.t_area ta
+            WHERE ta.active = 1
+        )
+        SELECT
+            NOW() AS add_time ,
+            COALESCE(kvt.city_id , parking_all.city_id) AS city_id,
+            COALESCE(tap.area_id, 0) AS area_id,
+            COALESCE(tap.area_name, '0') AS area_name,
+            COALESCE(parking_all.parking_id , kvt.parking_id) AS parking_id,
+            COALESCE(parking_all.parking_name , kvt.parking_name) AS parking_name,
+            COALESCE(kvt.kvt, 0) AS kvt 
+        FROM parking_all
+        LEFT JOIN kvt ON parking_all.parking_id = kvt.parking_id
+        LEFT JOIN damir.t_areas_parkings tap ON COALESCE(parking_all.parking_id , kvt.parking_id) = tap.parking_id
+    '''
+    df_t_last_kvt = pd.read_sql(select_t_last_kvt, engine_postgresql)
+
+    # Очистка таблицы
+    truncate_t_last_kvt = "TRUNCATE TABLE t_last_kvt RESTART IDENTITY;"
+
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            print(f"Попытка очистить таблицу")
+            # Очистка t_bike
+            connection.execute(sa.text(truncate_t_last_kvt))
+            # Если ошибок нет, транзакция фиксируется автоматически
+            print(f"Таблица truncate_t_last_kvt успешно очищена!")
+
+    df_t_last_kvt.to_sql("t_last_kvt", engine_postgresql, if_exists="append", index=False)
+    print('Таблица t_last_kvt успешно обновлена!')
+    # Выгрузка t_last_kvt pandas. Конец
 
 if __name__ == "__main__":
     main()
