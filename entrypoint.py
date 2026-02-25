@@ -232,7 +232,7 @@ def main():
     '''
 
     df_orders = pd.read_sql(select_orders, engine_postgresql)
-    print('select_orders' + str(df_orders['timestamp_hour'].unique()))
+    # print('select_orders' + str(df_orders['timestamp_hour'].unique()))
     # Соединяю orders и area
     df_orders_area = df_orders.merge(df_areas, how='cross')
     df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1)
@@ -420,9 +420,6 @@ def main():
     df_orders_kvt_area_res['sum_mnogor_abon'] = df_orders_kvt_area_res['sum_mnogor_abon'].fillna(0)
 
     df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
-
-    # x = df_orders_kvt_area_res.groupby('timestamp_hour').agg({'kvt': 'sum'})
-    # print('kvt3' + str(x))
 
     truncate_t_area_revenue_stats2 = '''
         DELETE FROM damir.t_area_revenue_stats2
