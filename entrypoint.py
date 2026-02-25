@@ -148,6 +148,17 @@ def main():
 
 
     # Выгрузка t_area_revenue_stats2 pandas. Начало
+
+
+    truncate_t_area_revenue_stats2 = '''
+    DELETE FROM damir.t_area_revenue_stats2
+    WHERE damir.t_area_revenue_stats2."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours';
+    '''
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            connection.execute(sa.text(truncate_t_area_revenue_stats2))
+            transaction.commit()
+            print(f"Таблица t_area_revenue_stats2 успешно очищена!")
     
     select_kvt = '''
         SELECT 
@@ -371,13 +382,13 @@ def main():
 
     # Соединяю основную таблицу с таблицей distr
     df_orders_areas_res = df_orders_areas_res.merge(df_distr, how='left', on='city_id')
-    df_orders_areas_res['dolgi'] = df_orders_areas_res['dolgi'].fillna(0)
-    df_orders_areas_res['vyruchka_s_abonementov'] = df_orders_areas_res['vyruchka_s_abonementov'].fillna(0)
-
     # Преобразование типов
+    df_orders_areas_res['dolgi'] = pd.to_numeric(df_orders_areas_res['dolgi'], errors='coerce')
+    df_orders_areas_res['vyruchka_s_abonementov'] = pd.to_numeric(df_orders_areas_res['vyruchka_s_abonementov'], errors='coerce')
     df_orders_areas_res['sum_mnogor_abon'] = pd.to_numeric(df_orders_areas_res['sum_mnogor_abon'], errors='coerce')
     # Преобразование типов
-
+    df_orders_areas_res['dolgi'] = df_orders_areas_res['dolgi'].fillna(0)
+    df_orders_areas_res['vyruchka_s_abonementov'] = df_orders_areas_res['vyruchka_s_abonementov'].fillna(0)
     df_orders_areas_res['sum_mnogor_abon'] = df_orders_areas_res['sum_mnogor_abon'].fillna(0)
     df_orders_areas_res = df_orders_areas_res.assign(
         cum_poezdok=df_orders_areas_res.groupby('city_id')['poezdok'].transform('sum'))
@@ -419,19 +430,8 @@ def main():
 
     df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
 
-    # x = df_orders_kvt_area_res.groupby('timestamp_hour').agg({'kvt': 'sum'})
-    # print('kvt3' + str(x))
-
-    truncate_t_area_revenue_stats2 = '''
-        DELETE FROM damir.t_area_revenue_stats2
-        WHERE damir.t_area_revenue_stats2."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours';
-        '''
-    with engine_postgresql.connect() as connection:
-        with connection.begin() as transaction:
-            connection.execute(sa.text(truncate_t_area_revenue_stats2))
-            transaction.commit()
-            print(f"Таблица t_area_revenue_stats2 успешно очищена!")
-
+    x = df_orders_kvt_area_res.groupby('timestamp_hour').agg({'kvt': 'sum'})
+    print('kvt3' + str(x))
 
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats2", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_area_revenue_stats2 успешно обновлена!')
@@ -439,6 +439,15 @@ def main():
     # Выгрузка t_area_revenue_stats2 pandas. Конец
 
     # Выгрузка t_area_revenue_stats3 pandas. Начало
+    truncate_t_area_revenue_stats3 = '''
+        DELETE FROM damir.t_area_revenue_stats3
+        WHERE damir.t_area_revenue_stats3."timestamp_hour" >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days';
+        '''
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            connection.execute(sa.text(truncate_t_area_revenue_stats3))
+            transaction.commit()
+            print(f"Таблица t_area_revenue_stats3 успешно очищена!")
 
     select_kvt = '''
         SELECT 
@@ -735,16 +744,6 @@ def main():
     df_orders_kvt_area_res['add_time'] = pd.Timestamp.now()
 
     df_orders_kvt_area_res.rename(columns={'start_day': 'timestamp_hour'}, inplace=True)
-
-    truncate_t_area_revenue_stats3 = '''
-        DELETE FROM damir.t_area_revenue_stats3
-        WHERE damir.t_area_revenue_stats3."timestamp_hour" >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days';
-        '''
-    with engine_postgresql.connect() as connection:
-        with connection.begin() as transaction:
-            connection.execute(sa.text(truncate_t_area_revenue_stats3))
-            transaction.commit()
-            print(f"Таблица t_area_revenue_stats3 успешно очищена!")
 
     df_orders_kvt_area_res.to_sql("t_area_revenue_stats3", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_area_revenue_stats3 успешно обновлена!')
