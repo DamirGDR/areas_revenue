@@ -1215,8 +1215,8 @@ def main():
     # Удаление + Загрузка в Google Sheets
     manager.truncate_and_write(
         df=df_parking_metadata,
-        range_name='Sheet2!A:D',
-        sheet_name='Sheet2',
+        range_name='Parking metadata!A:D',
+        sheet_name='Parking metadata',
         use_batch_clear=True,
         include_headers=True
     )
