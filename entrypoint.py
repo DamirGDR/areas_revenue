@@ -202,7 +202,7 @@ class GoogleSheetsManager:
                     range_name = f"{sheet_meta['title']}!A1:{last_column}{sheet_meta['row_count']}"
                 else:
                     # Если не удалось получить метаданные, используем большой диапазон
-                    range_name = 'Sheet1!A1:Z1000'
+                    range_name = 'Parking metadata!A1:D3000'
 
             # Очистка диапазона через метод clear
             result = self.service.spreadsheets().values().clear(
