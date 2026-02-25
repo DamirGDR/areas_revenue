@@ -1,12 +1,12 @@
 import os
+import json
 
 import pandas as pd
-import numpy as np
 import sqlalchemy as sa
-import json
 import google.oauth2.service_account
 import googleapiclient.discovery
-import datetime
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import polyline
 from shapely.geometry import Point, Polygon
 
@@ -112,6 +112,376 @@ def get_sheets_service(service_account_file: str):
         print(f"Ошибка при инициализации сервиса Google Sheets API: {e}")
         return None
 
+class GoogleSheetsManager:
+    """
+    Класс для управления Google Sheets с функцией очистки и записи данных
+    """
+
+    def __init__(self, credentials_file, spreadsheet_id):
+        """
+        Инициализация менеджера Google Sheets
+
+        Параметры:
+        credentials_file (str): Путь к файлу с credentials сервисного аккаунта
+        spreadsheet_id (str): ID Google таблицы
+        """
+        self.spreadsheet_id = spreadsheet_id
+        self.credentials_file = credentials_file
+        self.service = self._authenticate()
+
+    def _authenticate(self):
+        """
+        Аутентификация и создание сервиса Google Sheets
+        """
+        try:
+            credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+                self.credentials_file,
+                scopes=['https://www.googleapis.com/auth/spreadsheets']
+            )
+            service = build('sheets', 'v4', credentials=credentials)
+            return service
+        except Exception as e:
+            print(f"Ошибка аутентификации: {e}")
+            raise
+
+    def get_sheet_metadata(self, sheet_name=None):
+        """
+        Получает метаданные листа, включая количество строк и столбцов
+
+        Параметры:
+        sheet_name (str): Название листа (если None, используется первый лист)
+
+        Возвращает:
+        dict: Метаданные листа
+        """
+        try:
+            # Получаем метаданные таблицы
+            spreadsheet = self.service.spreadsheets().get(
+                spreadsheetId=self.spreadsheet_id,
+                ranges=[],
+                includeGridData=False
+            ).execute()
+
+            # Находим нужный лист
+            if sheet_name:
+                sheet = next((s for s in spreadsheet['sheets']
+                              if s['properties']['title'] == sheet_name), None)
+                if not sheet:
+                    raise ValueError(f"Лист '{sheet_name}' не найден")
+            else:
+                sheet = spreadsheet['sheets'][0]  # Берем первый лист
+
+            return {
+                'sheet_id': sheet['properties']['sheetId'],
+                'title': sheet['properties']['title'],
+                'row_count': sheet['properties'].get('gridProperties', {}).get('rowCount', 1000),
+                'column_count': sheet['properties'].get('gridProperties', {}).get('columnCount', 26)
+            }
+        except Exception as e:
+            print(f"Ошибка получения метаданных: {e}")
+            return None
+
+    def truncate_sheet(self, range_name=None):
+        """
+        Очищает все значения в указанном диапазоне (аналог TRUNCATE)
+
+        Параметры:
+        range_name (str): Диапазон для очистки (например, 'Sheet1!A1:Z1000')
+                          Если None, очищает весь первый лист
+
+        Возвращает:
+        bool: True если успешно, False в случае ошибки
+        """
+        try:
+            if range_name is None:
+                # Если диапазон не указан, получаем метаданные и очищаем весь лист
+                sheet_meta = self.get_sheet_metadata()
+                if sheet_meta:
+                    # Создаем диапазон для всего листа
+                    last_column = self._get_column_letter(sheet_meta['column_count'])
+                    range_name = f"{sheet_meta['title']}!A1:{last_column}{sheet_meta['row_count']}"
+                else:
+                    # Если не удалось получить метаданные, используем большой диапазон
+                    range_name = 'Sheet1!A1:Z1000'
+
+            # Очистка диапазона через метод clear
+            result = self.service.spreadsheets().values().clear(
+                spreadsheetId=self.spreadsheet_id,
+                range=range_name
+            ).execute()
+
+            print(f"✅ Диапазон {range_name} успешно очищен")
+            return True
+
+        except HttpError as error:
+            print(f"❌ Ошибка API при очистке: {error}")
+            return False
+        except Exception as e:
+            print(f"❌ Ошибка при очистке: {e}")
+            return False
+
+    def truncate_sheet_batch(self, sheet_name=None):
+        """
+        Очищает лист с помощью batchUpdate (более эффективно для больших листов)
+
+        Параметры:
+        sheet_name (str): Название листа для очистки
+
+        Возвращает:
+        bool: True если успешно, False в случае ошибки
+        """
+        try:
+            # Получаем метаданные листа
+            sheet_meta = self.get_sheet_metadata(sheet_name)
+
+            if not sheet_meta:
+                print("❌ Не удалось получить метаданные листа")
+                return False
+
+            # Создаем запрос на очистку через repeatCell
+            requests = [{
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_meta['sheet_id'],
+                        "startRowIndex": 0,
+                        "endRowIndex": sheet_meta['row_count'],
+                        "startColumnIndex": 0,
+                        "endColumnIndex": sheet_meta['column_count']
+                    },
+                    "cell": {
+                        "userEnteredValue": None  # Очищаем значения
+                    },
+                    "fields": "userEnteredValue"
+                }
+            }]
+
+            body = {
+                'requests': requests
+            }
+
+            # Выполняем batchUpdate
+            result = self.service.spreadsheets().batchUpdate(
+                spreadsheetId=self.spreadsheet_id,
+                body=body
+            ).execute()
+
+            print(f"✅ Лист '{sheet_meta['title']}' успешно очищен (batchUpdate)")
+            return True
+
+        except HttpError as error:
+            print(f"❌ Ошибка API при batch очистке: {error}")
+            return False
+        except Exception as e:
+            print(f"❌ Ошибка при batch очистке: {e}")
+            return False
+
+    def _get_column_letter(self, column_number):
+        """
+        Преобразует номер колонки в буквенное обозначение (1 -> A, 26 -> Z, 27 -> AA)
+
+        Параметры:
+        column_number (int): Номер колонки (начиная с 1)
+
+        Возвращает:
+        str: Буквенное обозначение колонки
+        """
+        result = ""
+        while column_number > 0:
+            column_number -= 1
+            result = chr(column_number % 26 + 65) + result
+            column_number //= 26
+        return result
+
+    def write_dataframe(self, df, range_name, value_input_option='RAW', include_headers=True):
+        """
+        Записывает DataFrame в Google Sheets
+
+        Параметры:
+        df (pandas.DataFrame): DataFrame для записи
+        range_name (str): Диапазон для записи (например, 'Sheet1!A1')
+        value_input_option (str): 'RAW' или 'USER_ENTERED'
+        include_headers (bool): Включать ли заголовки столбцов
+
+        Возвращает:
+        dict: Результат операции или None в случае ошибки
+        """
+        try:
+            # Подготовка данных
+            if include_headers:
+                values = [df.columns.values.tolist()] + df.values.tolist()
+            else:
+                values = df.values.tolist()
+
+            # Создание тела запроса
+            body = {
+                'values': values
+            }
+
+            # Запись данных
+            result = self.service.spreadsheets().values().update(
+                spreadsheetId=self.spreadsheet_id,
+                range=range_name,
+                valueInputOption=value_input_option,
+                body=body
+            ).execute()
+
+            print(f"✅ Записано {result.get('updatedCells')} ячеек")
+            print(f"📊 Диапазон: {result.get('updatedRange')}")
+            print(f"📝 Заголовки: {'включены' if include_headers else 'не включены'}")
+
+            return result
+
+        except HttpError as error:
+            print(f"❌ Ошибка API при записи: {error}")
+            return None
+        except Exception as e:
+            print(f"❌ Ошибка при записи: {e}")
+            return None
+
+    def truncate_and_write(self, df, range_name, sheet_name=None,
+                           use_batch_clear=False, include_headers=True):
+        """
+        Выполняет очистку (TRUNCATE) и запись новых данных
+
+        Параметры:
+        df (pandas.DataFrame): DataFrame для записи
+        range_name (str): Диапазон для записи (например, 'Sheet1!A1')
+        sheet_name (str): Название листа для очистки
+        use_batch_clear (bool): Использовать batchUpdate для очистки
+        include_headers (bool): Включать ли заголовки столбцов
+
+        Возвращает:
+        bool: True если успешно, False в случае ошибки
+        """
+        print("🚀 Начало операции truncate and write...")
+        print("=" * 50)
+
+        # Шаг 1: Очистка данных
+        print("📝 Шаг 1: Очистка существующих данных...")
+
+        if use_batch_clear:
+            success = self.truncate_sheet_batch(sheet_name)
+        else:
+            # Очищаем тот же диапазон, в который будем писать
+            success = self.truncate_sheet(range_name)
+
+        if not success:
+            print("❌ Очистка не удалась. Операция прервана.")
+            return False
+
+        print("✅ Очистка выполнена успешно")
+        print("-" * 50)
+
+        # Шаг 2: Запись новых данных
+        print("📝 Шаг 2: Запись новых данных...")
+
+        result = self.write_dataframe(
+            df=df,
+            range_name=range_name,
+            include_headers=include_headers
+        )
+
+        if result:
+            print("✅ Данные успешно записаны")
+            print("=" * 50)
+            print("🎉 Операция truncate and write завершена успешно!")
+            return True
+        else:
+            print("❌ Запись данных не удалась")
+            return False
+
+    def truncate_and_write_with_resize(self, df, sheet_name=None, start_cell='A1',
+                                       include_headers=True):
+        """
+        Очищает лист и записывает данные, автоматически подгоняя размеры
+
+        Параметры:
+        df (pandas.DataFrame): DataFrame для записи
+        sheet_name (str): Название листа
+        start_cell (str): Начальная ячейка для записи
+        include_headers (bool): Включать ли заголовки столбцов
+
+        Возвращает:
+        bool: True если успешно, False в случае ошибки
+        """
+        try:
+            print("🚀 Начало операции truncate, resize and write...")
+            print("=" * 50)
+
+            # Получаем метаданные листа
+            sheet_meta = self.get_sheet_metadata(sheet_name)
+
+            if not sheet_meta:
+                print("❌ Не удалось получить метаданные листа")
+                return False
+
+            # Определяем необходимые размеры
+            required_rows = len(df) + (1 if include_headers else 0)
+            required_cols = len(df.columns)
+
+            print(f"📊 Требуется строк: {required_rows}, столбцов: {required_cols}")
+
+            # Создаем запрос на изменение размеров и очистку
+            requests = [
+                # Очищаем все ячейки
+                {
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": sheet_meta['sheet_id'],
+                            "startRowIndex": 0,
+                            "endRowIndex": sheet_meta['row_count'],
+                            "startColumnIndex": 0,
+                            "endColumnIndex": sheet_meta['column_count']
+                        },
+                        "cell": {
+                            "userEnteredValue": None
+                        },
+                        "fields": "userEnteredValue"
+                    }
+                },
+                # Изменяем количество строк, если нужно
+                {
+                    "updateSheetProperties": {
+                        "properties": {
+                            "sheetId": sheet_meta['sheet_id'],
+                            "gridProperties": {
+                                "rowCount": max(required_rows, sheet_meta['row_count']),
+                                "columnCount": max(required_cols, sheet_meta['column_count'])
+                            }
+                        },
+                        "fields": "gridProperties.rowCount,gridProperties.columnCount"
+                    }
+                }
+            ]
+
+            # Выполняем batchUpdate
+            body = {'requests': requests}
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=self.spreadsheet_id,
+                body=body
+            ).execute()
+
+            print("✅ Лист очищен и размеры скорректированы")
+
+            # Записываем данные
+            range_name = f"{sheet_meta['title']}!{start_cell}"
+            result = self.write_dataframe(
+                df=df,
+                range_name=range_name,
+                include_headers=include_headers
+            )
+
+            if result:
+                print("=" * 50)
+                print("🎉 Операция завершена успешно!")
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            print(f"❌ Ошибка: {e}")
+            return False
+
 def decode_polyline_to_tuples(encoded_polyline_string):
     coordinates_tuples = polyline.decode(encoded_polyline_string)
     return coordinates_tuples
@@ -145,6 +515,12 @@ def main():
     url = sa.engine.make_url(url)
     url = url.set(drivername="postgresql+psycopg")
     engine_postgresql = sa.create_engine(url)
+
+    google_service_account_json = get_google_creds()
+
+    with open('google_json.json', 'w') as fp:
+        json.dump(json.loads(google_service_account_json, strict=False), fp)
+    generated_json_file = './google_json.json'
 
 
     # Выгрузка t_area_revenue_stats2 pandas. Начало
@@ -812,6 +1188,40 @@ def main():
     df_t_last_kvt.to_sql("t_last_kvt", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_last_kvt успешно обновлена!')
     # Выгрузка t_last_kvt pandas. Конец
+
+    # Обновление в Parking metadata в Google Sheets. Начало
+    SPREADSHEET_ID = '1b1lck8cPfqtBAOuzGjMYra6qnCs2dDn4TeUuB4FWHrU'
+    CREDENTIALS_FILE = generated_json_file
+
+    # Запрос последних данных из postgresql
+    select_parking_metadata = '''
+        SELECT 
+            dtprs.parking_id ,
+            ROUND(COALESCE(AVG(dtprs.poezdok) FILTER (WHERE (EXTRACT(HOUR FROM dtprs."timestamp") IN (6,7,8,9,10,11,12,13,14,15,16,17)) AND (EXTRACT(DOW FROM dtprs."timestamp") IN (1,2,3,4,5))), 0)) AS target_scooter_count_workday_6_to_18 ,
+            ROUND(COALESCE(AVG(dtprs.poezdok) FILTER (WHERE (EXTRACT(HOUR FROM dtprs."timestamp") IN (18,19,20,21,22,23,0,1,2,3,4,5)) AND (EXTRACT(DOW FROM dtprs."timestamp") IN (1,2,3,4,5))), 0)) AS target_scooter_count_workday_18_to_6 ,
+            ROUND(COALESCE(AVG(dtprs.poezdok) FILTER (WHERE EXTRACT(DOW FROM dtprs."timestamp") IN (6,7)), 0)) AS target_scooter_count_weekend
+        FROM damir.t_parking_revenue_stats1 dtprs
+        WHERE dtprs."timestamp"::date >= (NOW() + INTERVAL '2 HOURS')::date - INTERVAL '13 DAY'
+        --WHERE dtprs."timestamp"::date >= (NOW())::date - INTERVAL '13 DAY'
+        GROUP BY dtprs.parking_id
+        ORDER BY dtprs.parking_id ASC
+    '''
+
+    df_parking_metadata = pd.read_sql(select_parking_metadata, engine_postgresql)
+
+    # Создаем экземпляр менеджера
+    manager = GoogleSheetsManager(CREDENTIALS_FILE, SPREADSHEET_ID)
+
+    # Удаление + Загрузка в Google Sheets
+    manager.truncate_and_write(
+        df=df_parking_metadata,
+        range_name='Sheet2!A:D',
+        sheet_name='Sheet2',
+        use_batch_clear=True,
+        include_headers=True
+    )
+
+    # Обновление в Parking metadata в Google Sheets. Конец
 
 if __name__ == "__main__":
     main()
