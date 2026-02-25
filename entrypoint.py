@@ -373,6 +373,11 @@ def main():
     df_orders_areas_res = df_orders_areas_res.merge(df_distr, how='left', on='city_id')
     df_orders_areas_res['dolgi'] = df_orders_areas_res['dolgi'].fillna(0)
     df_orders_areas_res['vyruchka_s_abonementov'] = df_orders_areas_res['vyruchka_s_abonementov'].fillna(0)
+
+    # Преобразование типов
+    df_orders_areas_res['sum_mnogor_abon'] = pd.to_numeric(df_orders_areas_res['sum_mnogor_abon'], errors='coerce')
+    # Преобразование типов
+
     df_orders_areas_res['sum_mnogor_abon'] = df_orders_areas_res['sum_mnogor_abon'].fillna(0)
     df_orders_areas_res = df_orders_areas_res.assign(
         cum_poezdok=df_orders_areas_res.groupby('city_id')['poezdok'].transform('sum'))
