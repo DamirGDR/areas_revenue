@@ -178,10 +178,6 @@ def main():
     '''
     df_kvt = pd.read_sql(select_kvt, engine_postgresql)
 
-    # print('select_kvt' + str(df_kvt['timestamp_hour'].unique()))
-    # x = df_kvt.groupby('timestamp_hour').agg({'id': 'count'})
-    # print('kvt1' + str(x))
-
     # Выгрузка areas
     select_areas = '''
         SELECT
@@ -211,9 +207,6 @@ def main():
         .rename(columns={'id': 'kvt'}) \
         .reset_index()
 
-    # x = df_kvt_area_res.groupby('timestamp_hour').agg({'kvt': 'sum'})
-    # print('kvt2' + str(x))
-
     # Выгрузка заказов
     select_orders = '''
         SELECT 
@@ -232,7 +225,6 @@ def main():
     '''
 
     df_orders = pd.read_sql(select_orders, engine_postgresql)
-    # print('select_orders' + str(df_orders['timestamp_hour'].unique()))
     # Соединяю orders и area
     df_orders_area = df_orders.merge(df_areas, how='cross')
     df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1)
