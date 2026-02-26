@@ -202,7 +202,7 @@ class GoogleSheetsManager:
                     range_name = f"{sheet_meta['title']}!A1:{last_column}{sheet_meta['row_count']}"
                 else:
                     # Если не удалось получить метаданные, используем большой диапазон
-                    range_name = 'Copy of Parking metadata 1!A1:D3000'
+                    range_name = 'Parking metadata!A1:D3000'
 
             # Очистка диапазона через метод clear
             result = self.service.spreadsheets().values().clear(
@@ -1216,8 +1216,8 @@ def main():
     # Удаление + Загрузка в Google Sheets
     manager.truncate_and_write(
         df=df_parking_metadata,
-        range_name='Copy of Parking metadata 1!A:D',
-        sheet_name='Copy of Parking metadata 1',
+        range_name='Parking metadata!A:D',
+        sheet_name='Parking metadata',
         use_batch_clear=True,
         include_headers=True
     )
