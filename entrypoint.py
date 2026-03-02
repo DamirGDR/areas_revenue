@@ -522,6 +522,73 @@ def main():
         json.dump(json.loads(google_service_account_json, strict=False), fp)
     generated_json_file = './google_json.json'
 
+    # Загрузка в t_area_kvt_history. Начало
+    select_kvt = '''
+        SELECT 
+            tb."timestamp" ,
+            date_trunc('hour', tb."timestamp") AS "timestamp_hour" ,
+            tb.id ,
+            tb.g_lat ,
+            tb.g_lng ,
+            tb.city_id 
+        FROM damir.t_bike tb  
+        WHERE 
+            --tb."timestamp"::date >= date_trunc('day', NOW())
+            --AND 
+            tb.error_status IN (0,7)
+    '''
+    df_kvt = pd.read_sql(select_kvt, engine_postgresql)
+
+    # Выгрузка areas
+    select_areas = '''
+        SELECT
+            --ta.city_id ,
+            ta.id AS area_id ,
+            ta."name" AS area_name ,
+            ta.detail AS area_detail
+        FROM damir.t_area ta
+        WHERE ta."name" LIKE '%%| Area |%%'
+    '''
+    df_areas = pd.read_sql(select_areas, engine_postgresql)
+
+    # area в полигоны
+    df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
+
+    df_kvt_area = df_kvt.merge(df_areas, how='cross')
+    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
+
+    df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
+
+    df_kvt_area_res = df_kvt_area_res.drop(
+        columns=['timestamp', 'city_id', 'g_lat', 'g_lng', 'area_detail', 'area_poly', 'res'])
+    df_kvt_area_res = df_kvt.merge(df_kvt_area_res, how='left', on=['timestamp_hour', 'id'])
+    df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0)
+    df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0')
+
+    df_kvt_area_res = df_kvt_area_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name']) \
+        .agg({'id': 'count'}) \
+        .rename(columns={'id': 'kvt'}) \
+        .reset_index()
+    df_kvt_area_res['add_time'] = pd.Timestamp.now()
+
+    # Очистка таблицы
+    truncate_area_kvt_history = '''
+        DELETE FROM damir.t_area_kvt_history takh
+        WHERE takh."timestamp_hour" >= date_trunc('hour', (NOW() + INTERVAL '2 hours'));
+    '''
+
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            print(f"Попытка очистить таблицу")
+            # Очистка t_bike
+            connection.execute(sa.text(truncate_area_kvt_history))
+            # Если ошибок нет, транзакция фиксируется автоматически
+            print(f"Таблица truncate_area_kvt_history успешно очищена!")
+
+    df_kvt_area_res.to_sql("t_area_kvt_history", engine_postgresql, if_exists="append", index=False)
+    print('Таблица t_area_kvt_history успешно обновлена!')
+
+    # Загрузка в t_area_kvt_history. Конец
 
     # Выгрузка t_area_revenue_stats2 pandas. Начало
 
