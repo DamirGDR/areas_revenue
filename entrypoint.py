@@ -525,8 +525,12 @@ def main():
     # Загрузка в t_area_kvt_history. Начало
     select_kvt = '''
         SELECT 
-            tb."timestamp" ,
-            date_trunc('hour', tb."timestamp") AS "timestamp_hour" ,
+            NOW() + INTERVAL '2 hours' AS "timestamp" ,
+            --tb."timestamp" ,
+            --date_trunc('hour', tb."timestamp") AS "timestamp_hour" ,
+            date_trunc('hour', (NOW() + INTERVAL '2 hours')) AS "timestamp_hour" ,
+            --tb."timestamp" ,
+            --date_trunc('hour', tb."timestamp") AS "timestamp_hour" ,
             tb.id ,
             tb.g_lat ,
             tb.g_lng ,
