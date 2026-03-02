@@ -877,68 +877,84 @@ def main():
 
     # Выгрузка t_area_revenue_stats3 pandas. Начало
 
-    select_kvt = '''
+    # select_kvt = '''
+    #     SELECT
+    #         res_tab."timestamp" ,
+    #         res_tab.timestamp_hour ,
+    #         res_tab.id ,
+    #         res_tab.city_id ,
+    #         res_tab.g_lat ,
+    #         res_tab.g_lng
+    #     FROM
+    #     (
+    #         SELECT
+    #             tbh."timestamp" ,
+    #             date_trunc('hour', tbh."timestamp") AS "timestamp_hour" ,
+    #             tbh.id ,
+    #             tbh.g_lat ,
+    #             tbh.g_lng ,
+    #             tb.city_id ,
+    #             RANK() OVER (PARTITION BY date_trunc('hour', tbh."timestamp") ORDER BY tbh."timestamp" DESC) AS rn
+    #         FROM damir.t_bike_history tbh
+    #         LEFT JOIN damir.t_bike tb ON tbh.id = tb.id
+    #         WHERE tbh.error_status IN (0,7)
+    #             --AND tbh."timestamp" >= date_trunc('hour', NOW())
+    #             AND tbh."timestamp" >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+    #         ) AS res_tab
+    #     WHERE res_tab.rn = 1
+    # '''
+    #
+    # df_kvt = pd.read_sql(select_kvt, engine_postgresql)
+    #
+    # # Выгрузка areas
+    # select_areas = '''
+    #     SELECT
+    #         --ta.city_id ,
+    #         ta.id AS area_id ,
+    #         ta."name" AS area_name ,
+    #         ta.detail AS area_detail
+    #     FROM damir.t_area ta
+    #     WHERE ta."name" LIKE '%%| Area |%%'
+    # '''
+    #
+    # df_areas = pd.read_sql(select_areas, engine_postgresql)
+    #
+    # # area в полигоны
+    # df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
+    # df_kvt_area = df_kvt.merge(df_areas, how='cross')
+    # df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
+    # df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
+    # df_kvt_area_res = df_kvt_area_res.drop(
+    #     columns=['timestamp', 'city_id', 'g_lat', 'g_lng', 'area_detail', 'area_poly', 'res'])
+    # df_kvt_area_res = df_kvt.merge(df_kvt_area_res, how='left', on=['timestamp_hour', 'id'])
+    # df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0)
+    # df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0')
+    #
+    # df_kvt_area_res = df_kvt_area_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name']) \
+    #     .agg({'id': 'count'}) \
+    #     .rename(columns={'id': 'kvt'}) \
+    #     .reset_index()
+    #
+    # # Собираю все в один день
+    # df_kvt_area_res['start_day'] = pd.to_datetime(df_kvt_area_res['timestamp_hour'].dt.date)
+    # df_kvt_area_res = df_kvt_area_res.groupby(['start_day', 'city_id', 'area_id', 'area_name'], as_index=False) \
+    #     .agg({'kvt': 'mean'})
+
+    select_kvt_area_res = '''
         SELECT 
-            res_tab."timestamp" ,
-            res_tab.timestamp_hour ,
-            res_tab.id ,
-            res_tab.city_id ,
-            res_tab.g_lat ,
-            res_tab.g_lng
-        FROM 
-        (
-            SELECT 
-                tbh."timestamp" ,
-                date_trunc('hour', tbh."timestamp") AS "timestamp_hour" ,
-                tbh.id ,
-                tbh.g_lat ,
-                tbh.g_lng ,
-                tb.city_id ,
-                RANK() OVER (PARTITION BY date_trunc('hour', tbh."timestamp") ORDER BY tbh."timestamp" DESC) AS rn
-            FROM damir.t_bike_history tbh
-            LEFT JOIN damir.t_bike tb ON tbh.id = tb.id 
-            WHERE tbh.error_status IN (0,7)
-                --AND tbh."timestamp" >= date_trunc('hour', NOW())
-                AND tbh."timestamp" >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
-            ) AS res_tab
-        WHERE res_tab.rn = 1
+            takh.timestamp_hour::date AS start_day ,
+            takh.city_id ,
+            takh.area_id ,
+            takh.area_name ,
+            ROUND(AVG(takh.kvt)) AS kvt
+        FROM damir.t_area_kvt_history takh
+        WHERE takh.timestamp_hour >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+        -- WHERE takh.timestamp_hour >= date_trunc('day', (NOW())) - INTERVAL '1 days'
+        GROUP BY takh.timestamp_hour::date , takh.city_id , takh.area_id , takh.area_name
+        ORDER BY takh.timestamp_hour::date ASC
     '''
-
-    df_kvt = pd.read_sql(select_kvt, engine_postgresql)
-
-    # Выгрузка areas
-    select_areas = '''
-        SELECT
-            --ta.city_id ,
-            ta.id AS area_id ,
-            ta."name" AS area_name ,
-            ta.detail AS area_detail
-        FROM damir.t_area ta
-        WHERE ta."name" LIKE '%%| Area |%%'
-    '''
-
-    df_areas = pd.read_sql(select_areas, engine_postgresql)
-
-    # area в полигоны
-    df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
-    df_kvt_area = df_kvt.merge(df_areas, how='cross')
-    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
-    df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
-    df_kvt_area_res = df_kvt_area_res.drop(
-        columns=['timestamp', 'city_id', 'g_lat', 'g_lng', 'area_detail', 'area_poly', 'res'])
-    df_kvt_area_res = df_kvt.merge(df_kvt_area_res, how='left', on=['timestamp_hour', 'id'])
-    df_kvt_area_res['area_id'] = df_kvt_area_res['area_id'].fillna(0)
-    df_kvt_area_res['area_name'] = df_kvt_area_res['area_name'].fillna('0')
-
-    df_kvt_area_res = df_kvt_area_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name']) \
-        .agg({'id': 'count'}) \
-        .rename(columns={'id': 'kvt'}) \
-        .reset_index()
-
-    # Собираю все в один день
-    df_kvt_area_res['start_day'] = pd.to_datetime(df_kvt_area_res['timestamp_hour'].dt.date)
-    df_kvt_area_res = df_kvt_area_res.groupby(['start_day', 'city_id', 'area_id', 'area_name'], as_index=False) \
-        .agg({'kvt': 'mean'})
+    df_kvt_area_res = pd.read_sql(select_kvt_area_res, engine_postgresql)
+    df_kvt_area_res['start_day'] = pd.to_datetime(df_kvt_area_res['start_day'])
 
     # Выгрузка заказов
     select_orders = '''
