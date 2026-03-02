@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил t_area_kvt_history1">
+      <change beforePath="$PROJECT_DIR$/entrypoint.py" beforeDir="false" afterPath="$PROJECT_DIR$/entrypoint.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="39nElM6RPplasF5pWBcfSjqkLVg" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/rimad/Desktop/MOOW/la/areas_revenue/git&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  }
+}</component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="" />
+      <created>1771323585156</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1771323585156</updated>
+    </task>
+    <task id="LOCAL-00001" summary="areas_revenue -1 день">
+      <created>1771338530571</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1771338530571</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Добавил t_last_kvt для Rebalance">
+      <created>1771931650983</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1771931650983</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Выгрузка -&gt; Удаление -&gt; Загрузка">
+      <created>1772013425526</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1772013425527</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Преобразование типов">
+      <created>1772017701754</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1772017701754</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Преобразование типов">
+      <created>1772018495281</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1772018495281</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Преобразование типов1">
+      <created>1772018652428</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1772018652428</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Убрал">
+      <created>1772019108790</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1772019108790</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Убрал print дебага">
+      <created>1772019203520</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1772019203520</updated>
+    </task>
+    <task id="LOCAL-00009" summary="!Выгрузка в Google Sheets Parking metadata">
+      <created>1772020908961</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1772020908961</updated>
+    </task>
+    <task id="LOCAL-00010" summary="тест">
+      <created>1772025313668</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1772025313668</updated>
+    </task>
+    <task id="LOCAL-00011" summary="тест1">
+      <created>1772026584232</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1772026584232</updated>
+    </task>
+    <task id="LOCAL-00012" summary="тест2">
+      <created>1772102913073</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1772102913073</updated>
+    </task>
+    <task id="LOCAL-00013" summary="тест3">
+      <created>1772104004241</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1772104004241</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Добавил t_area_kvt_history">
+      <created>1772463853058</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1772463853058</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Добавил t_area_kvt_history1">
+      <created>1772466512284</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1772466512284</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="areas_revenue -1 день" />
+    <MESSAGE value="Добавил t_last_kvt для Rebalance" />
+    <MESSAGE value="Выгрузка -&gt; Удаление -&gt; Загрузка" />
+    <MESSAGE value="Преобразование типов" />
+    <MESSAGE value="Преобразование типов1" />
+    <MESSAGE value="Убрал" />
+    <MESSAGE value="Убрал print дебага" />
+    <MESSAGE value="!Выгрузка в Google Sheets Parking metadata" />
+    <MESSAGE value="тест" />
+    <MESSAGE value="тест1" />
+    <MESSAGE value="тест2" />
+    <MESSAGE value="тест3" />
+    <MESSAGE value="Добавил t_area_kvt_history" />
+    <MESSAGE value="Добавил t_area_kvt_history1" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавил t_area_kvt_history1" />
+  </component>
+</project>
