@@ -593,7 +593,7 @@ def main():
             # Очистка t_bike
             connection.execute(sa.text(truncate_area_kvt_history))
             # Если ошибок нет, транзакция фиксируется автоматически
-            print(f"Таблица truncate_area_kvt_history успешно очищена!")
+            print(f"Таблица area_kvt_history успешно очищена!")
 
     df_kvt_area_res.to_sql("t_area_kvt_history", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_area_kvt_history успешно обновлена!')
