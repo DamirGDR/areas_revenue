@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил t_area_kvt_history1">
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Изменил area_revenue_stats3">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/entrypoint.py" beforeDir="false" afterPath="$PROJECT_DIR$/entrypoint.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -144,7 +145,21 @@
       <option name="project" value="LOCAL" />
       <updated>1772466512284</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Изменил area_revenue_stats3">
+      <created>1772469489387</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1772469489387</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Изменил area_revenue_stats3">
+      <created>1772469577552</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1772469577552</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -173,6 +188,7 @@
     <MESSAGE value="тест3" />
     <MESSAGE value="Добавил t_area_kvt_history" />
     <MESSAGE value="Добавил t_area_kvt_history1" />
-    <option name="LAST_COMMIT_MESSAGE" value="Добавил t_area_kvt_history1" />
+    <MESSAGE value="Изменил area_revenue_stats3" />
+    <option name="LAST_COMMIT_MESSAGE" value="Изменил area_revenue_stats3" />
   </component>
 </project>

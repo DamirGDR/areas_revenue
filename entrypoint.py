@@ -504,6 +504,12 @@ def poly_contains_point_orders(df):
     res = area_poly.contains(start_point)
     return res
 
+def poly_contains_point_open_app(df):
+    start_point = Point(df['lat'], df['lng'])
+    area_poly = Polygon(df['area_poly'])
+    res = area_poly.contains(start_point)
+    return res
+
 def main():
 
     url = get_mysql_url()
@@ -593,6 +599,82 @@ def main():
     print('Таблица t_area_kvt_history успешно обновлена!')
 
     # Загрузка в t_area_kvt_history. Конец
+
+    # Загрузка в t_area_open_app_history. Начало
+
+    select_app_open = '''
+        SELECT 
+            date_trunc('hour', res.created) AS timestamp_hour,
+            res.city_id ,
+            res.id ,
+            res.open_lat AS lat ,
+            res.open_lng AS lng
+        FROM 
+        (
+            SELECT 
+                taul.created ,
+                taul.lat AS open_lat,
+                taul.lng AS open_lng,
+                taul.id ,
+                ta.city_id ,
+                --ta.id AS parking_id ,
+                --ta."name" AS parking_name ,
+                ta.lat ,
+                ta.lng ,
+                6371000 * acos(
+                                cos(radians(taul.lat)) * 
+                                cos(radians(ta.lat)) * 
+                                cos(radians(ta.lng) - radians(taul.lng)) + 
+                                sin(radians(taul.lat)) * 
+                                sin(radians(ta.lat))) AS distance ,
+                RANK() OVER (PARTITION BY taul.id ORDER BY 6371000 * acos(
+                                                                    cos(radians(taul.lat)) * 
+                                                                    cos(radians(ta.lat)) * 
+                                                                    cos(radians(ta.lng) - radians(taul.lng)) + 
+                                                                    sin(radians(taul.lat)) * 
+                                                                    sin(radians(ta.lat)))
+                                                                        ) AS rn
+            FROM damir.t_audit_user_location taul 
+            CROSS JOIN damir.t_area ta
+            WHERE taul.created >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '3 hours'
+            --WHERE taul.created >= date_trunc('hour', NOW()) - INTERVAL '3 hours'
+                AND ta.active = 1
+            ) AS res
+        WHERE res.rn = 1
+    '''
+
+    df_app_open = pd.read_sql(select_app_open, engine_postgresql)
+
+    # Соединяю открытия приложения и area
+    df_app_open_area = df_app_open.merge(df_areas, how='cross')
+
+    df_app_open_area['res'] = df_app_open_area.apply(poly_contains_point_open_app, axis=1)
+    df_app_open_area = df_app_open_area[df_app_open_area['res'] == True]
+    df_app_open_res = df_app_open[['timestamp_hour', 'city_id', 'id']].merge(
+        df_app_open_area[['area_id', 'area_name', 'id']], on='id', how='left')
+    df_app_open_res['area_id'] = df_app_open_res['area_id'].fillna(0)
+    df_app_open_res['area_name'] = df_app_open_res['area_name'].fillna('0')
+    df_app_open_res = df_app_open_res.groupby(['timestamp_hour', 'city_id', 'area_id', 'area_name'], as_index=False) \
+        .agg({'id': 'count'}) \
+        .rename(columns={'id': 'open_app'})
+    df_app_open_res['add_time'] = pd.Timestamp.now()
+
+    truncate_t_area_open_app_history = '''
+        DELETE FROM damir.t_area_open_app_history
+        WHERE damir.t_area_open_app_history."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '3 hours';
+        '''
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            connection.execute(sa.text(truncate_t_area_open_app_history))
+            transaction.commit()
+            print(f"Таблица t_area_open_app_history успешно очищена!")
+
+    df_app_open_res.to_sql("t_area_open_app_history", engine_postgresql, if_exists="append", index=False)
+    print('Таблица t_area_open_app_history успешно обновлена!')
+
+    # Загрузка в t_area_open_app_history. Конец
+
+
 
     # Выгрузка t_area_revenue_stats2 pandas. Начало
 
