@@ -1038,6 +1038,22 @@ def main():
     df_kvt_area_res = pd.read_sql(select_kvt_area_res, engine_postgresql)
     df_kvt_area_res['start_day'] = pd.to_datetime(df_kvt_area_res['start_day'])
 
+    select_open_app_res = '''
+        SELECT 
+            taoah.timestamp_hour::date AS start_day ,
+            taoah.city_id ,
+            taoah.area_id ,
+            taoah.area_name ,
+            SUM(taoah.open_app) AS open_app
+        FROM damir.t_area_open_app_history taoah 
+        WHERE taoah.timestamp_hour >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+        -- WHERE taoah.timestamp_hour >= date_trunc('day', (NOW())) - INTERVAL '1 days'
+        GROUP BY taoah.timestamp_hour::date , taoah.city_id , taoah.area_id , taoah.area_name
+        ORDER BY taoah.timestamp_hour::date ASC
+    '''
+    df_open_app_area_res = pd.read_sql(select_open_app_res, engine_postgresql)
+    df_open_app_area_res['start_day'] = pd.to_datetime(df_open_app_area_res['start_day'])
+
     # Выгрузка заказов
     select_orders = '''
         SELECT
@@ -1240,11 +1256,15 @@ def main():
     # Соединяю КВТ и orders
     df_orders_kvt_area_res = df_kvt_area_res.merge(df_orders_areas_res, how='left',
                                                    on=['start_day', 'city_id', 'area_id', 'area_name'])
+    # Добавляю open_app
+    df_orders_kvt_area_res = df_open_app_area_res.merge(df_orders_kvt_area_res, how='outer',
+                                                        on=['start_day', 'city_id', 'area_id', 'area_name'])
 
     df_orders_kvt_area_res = df_orders_kvt_area_res[['start_day',
                                                      'city_id',
                                                      'area_id',
                                                      'area_name',
+                                                     'open_app',
                                                      'kvt',
                                                      'poezdok',
                                                      'obzchaya_stoimost',
@@ -1259,6 +1279,8 @@ def main():
                          'vyruchka_s_abonementov_res': 'vyruchka_s_abonementov',
                          'sum_mnogor_abon_res': 'sum_mnogor_abon'})
 
+    df_orders_kvt_area_res['open_app'] = df_orders_kvt_area_res['open_app'].fillna(0).astype(float)
+    df_orders_kvt_area_res['kvt'] = df_orders_kvt_area_res['kvt'].fillna(0).astype(float)
     df_orders_kvt_area_res['poezdok'] = df_orders_kvt_area_res['poezdok'].fillna(0).astype(float)
     df_orders_kvt_area_res['obzchaya_stoimost'] = df_orders_kvt_area_res['obzchaya_stoimost'].fillna(0).astype(float)
     df_orders_kvt_area_res['oplacheno_bonusami'] = df_orders_kvt_area_res['oplacheno_bonusami'].fillna(0).astype(float)
