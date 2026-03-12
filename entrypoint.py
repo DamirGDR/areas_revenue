@@ -1415,5 +1415,76 @@ def main():
 
     # Обновление в Parking metadata в Google Sheets. Конец
 
+    # Обновление t_area_plan. Начало
+    # Выгружаю t_area_plan за сегодня
+    select_t_area_plan = '''
+        SELECT 
+            NOW() AS add_time ,
+            res.timestamp_hour ,
+            res.city_id ,
+            res.area_id::int ,
+            res.area_name ,
+            res.kvt::int ,
+            res.poezdok::int ,
+            --res.kvt_city ,
+            --res.poezdok_2w_area ,
+            --res.poezdok_2w_city ,
+            COALESCE(ROUND(res.kvt_city * res.poezdok_2w_area / NULLIF(res.poezdok_2w_city, 0)), 0)::int AS plan_poezdok
+        FROM 
+        (
+            SELECT 
+                res.timestamp_hour ,
+                res.city_id ,
+                res.area_id ,
+                res.area_name ,
+                res.kvt ,
+                res.poezdok ,
+                ROUND(SUM(res.kvt) OVER (PARTITION BY res.timestamp_hour, res.city_id)) AS kvt_city,
+                SUM(res.poezdok ) OVER (PARTITION BY res.city_id, res.area_id , res.area_name ORDER BY res.timestamp_hour RANGE BETWEEN '14 days' PRECEDING AND '1 day' PRECEDING) AS poezdok_2w_area ,
+                SUM(res.poezdok ) OVER (PARTITION BY res.city_id ORDER BY res.timestamp_hour RANGE BETWEEN '14 days' PRECEDING AND '1 day' PRECEDING) AS poezdok_2w_city
+            FROM 
+            (
+                SELECT 
+                    tars.timestamp_hour ,
+                    tars.city_id ,
+                    tars.area_id ,
+                    tars.area_name ,
+                    tars.kvt   AS kvt ,
+                    tars.poezdok AS poezdok
+                    --AVG(tars.kvt)   AS kvt ,
+                    --SUM(tars.poezdok) AS poezdok
+                    --SUM(SUM(tars.kvt ) FILTER (WHERE tars.timestamp_hour::date = NOW()::date)) OVER (PARTITION BY tars.city_id)  AS kvt_city,
+                    --SUM(tars.poezdok ) OVER (PARTITION BY tars.city_id, tars.area_id , tars.area_name ORDER BY tars.timestamp_hour RANGE BETWEEN '13 days' PRECEDING AND CURRENT ROW) AS poezdok_2w_area,
+                    --SUM(SUM(tars.poezdok ) OVER (PARTITION BY tars.city_id ORDER BY tars.timestamp_hour RANGE BETWEEN '13 days' PRECEDING AND CURRENT ROW)) AS poezdok_2w_city
+                FROM damir.t_area_revenue_stats3 tars
+                --WHERE tars.timestamp_hour >= (NOW()::date) - INTERVAL '16 days'
+                WHERE tars.timestamp_hour >= ((NOW() + INTERVAL '2 hours')::date) - INTERVAL '18 days'
+                --GROUP BY tars.timestamp_hour::date , tars.city_id , tars.area_id , tars.area_name 
+            ) AS res
+            ORDER BY res.timestamp_hour DESC
+        ) AS res
+        --WHERE res.timestamp_hour = NOW()::date
+        WHERE res.timestamp_hour >= (NOW() + INTERVAL '2 hours')::date - INTERVAL '2 day'
+        ORDER BY res.timestamp_hour , res.city_id , res.area_id
+    '''
+    df_t_area_plan = pd.read_sql(select_t_area_plan, engine_postgresql)
+
+    # Очистка таблицы
+    delete_t_last_kvt = '''
+            DELETE FROM damir.t_area_plan
+            WHERE damir.t_area_plan."timestamp_hour" >= (NOW() + INTERVAL '2 hours')::date - INTERVAL '2 day';
+    '''
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            print(f"Попытка очистить таблицу")
+            # Очистка t_bike
+            connection.execute(sa.text(delete_t_last_kvt))
+            # Если ошибок нет, транзакция фиксируется автоматически
+            print(f"Таблица t_area_plan успешно очищена!")
+
+    df_t_area_plan.to_sql("t_area_plan", engine_postgresql, if_exists="append", index=False)
+    print('Таблица t_area_plan успешно обновлена!')
+    # Обновление t_area_plan. Конец
+
 if __name__ == "__main__":
     main()
