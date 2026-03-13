@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил open_app к area_revenue">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entrypoint.py" beforeDir="false" afterPath="$PROJECT_DIR$/entrypoint.py" afterDir="false" />
-    </list>
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил t_area_plan" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -187,7 +184,14 @@
       <option name="project" value="LOCAL" />
       <updated>1773067391894</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Добавил t_area_plan">
+      <created>1773323977568</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1773323977568</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -220,6 +224,7 @@
     <MESSAGE value="Добавил t_area_open_app_history" />
     <MESSAGE value="Изменил сообщение в логах" />
     <MESSAGE value="Добавил open_app к area_revenue" />
-    <option name="LAST_COMMIT_MESSAGE" value="Добавил open_app к area_revenue" />
+    <MESSAGE value="Добавил t_area_plan" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавил t_area_plan" />
   </component>
 </project>

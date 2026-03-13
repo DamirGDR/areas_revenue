@@ -1486,5 +1486,45 @@ def main():
     print('Таблица t_area_plan успешно обновлена!')
     # Обновление t_area_plan. Конец
 
+    # Обновление t_rebalance_sum_avg_rides_2w. Начало
+    # Копирую t_rebalance_sum_avg_rides_2w
+    select_t_rebalance_sum_avg_rides_2w = '''
+        SELECT
+            --EXTRACT(HOUR FROM tprs."timestamp") ,
+            --tprs."timestamp"::date ,
+            --tprs.city_id ,
+            NOW() AS add_time ,
+            tprs.parking_id ,
+            --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (6,7,8,9,10,11,12)), 0)) AS "06:00-12:59" ,
+            --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (13,14,15,16)), 0)) AS "13:00-16:59" ,
+            --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (17,18,19,20,21)), 0)) AS "17:00-21:59" ,
+            --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (2,3,4,5,0,1,22,23)), 0)) AS "22:00-01:59 + 02:00-05:59" ,
+            ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (2,3,4,5,0,1,22,23)), 0)) + 
+            ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (6,7,8,9,10,11,12)), 0)) + 
+            ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (13,14,15,16)), 0)) + 
+            ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (17,18,19,20,21)), 0)) AS poezdok_2w
+        FROM damir.t_parking_revenue_stats1 tprs 
+        --WHERE tprs."timestamp" >= NOW()::date - INTERVAL '14 days'
+        WHERE tprs."timestamp" >= (NOW() + INTERVAL '2 hours')::date - INTERVAL '14 days'
+        GROUP BY tprs.parking_id
+        ORDER BY tprs.parking_id
+    '''
+    df_t_rebalance_sum_avg_rides_2w = pd.read_sql(select_t_rebalance_sum_avg_rides_2w, engine_postgresql)
+
+    # Очистка таблицы
+    truncate_t_rebalance_sum_avg_rides_2w = "TRUNCATE TABLE t_rebalance_sum_avg_rides_2w RESTART IDENTITY;"
+    with engine_postgresql.connect() as connection:
+        with connection.begin() as transaction:
+            print(f"Попытка очистить таблицу")
+            # Очистка t_area
+            connection.execute(sa.text(truncate_t_rebalance_sum_avg_rides_2w))
+            # Если ошибок нет, транзакция фиксируется автоматически
+            print(f"Таблица t_rebalance_sum_avg_rides_2w успешно очищена!")
+
+    df_t_rebalance_sum_avg_rides_2w.to_sql("t_rebalance_sum_avg_rides_2w", engine_postgresql, if_exists="append",
+                                           index=False)
+    print('Таблица t_rebalance_sum_avg_rides_2w успешно обновлена!')
+    # Обновление t_rebalance_sum_avg_rides_2w. Конец
+
 if __name__ == "__main__":
     main()
