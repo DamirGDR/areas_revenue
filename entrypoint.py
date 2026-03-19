@@ -1564,10 +1564,10 @@ def main():
         current = response.Current()
         df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_temperature_2m'] = round(
             current.Variables(0).Value(), 2)
-        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_relative_humidity_2m'] = current.Variables(
-            1).Value()
-        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_precipitation'] = current.Variables(2).Value()
-        #     print(city_id)
+        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_relative_humidity_2m'] = round(
+            current.Variables(1).Value(), 2)
+        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_precipitation'] = round(
+            current.Variables(2).Value(), 2)
 
     df_cities_weather.to_sql("t_cities_weather", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_cities_weather успешно обновлена!')

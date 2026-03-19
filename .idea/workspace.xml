@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил выгрузку погоды">
-      <change beforePath="$PROJECT_DIR$/entrypoint.py" beforeDir="false" afterPath="$PROJECT_DIR$/entrypoint.py" afterDir="false" />
-    </list>
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил выгрузку погоды1" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -207,7 +205,14 @@
       <option name="project" value="LOCAL" />
       <updated>1773930632114</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Добавил выгрузку погоды1">
+      <created>1773931155439</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1773931155439</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -243,6 +248,7 @@
     <MESSAGE value="Добавил t_area_plan" />
     <MESSAGE value="Добавил t_rebalance_sum_avg_rides_2w" />
     <MESSAGE value="Добавил выгрузку погоды" />
-    <option name="LAST_COMMIT_MESSAGE" value="Добавил выгрузку погоды" />
+    <MESSAGE value="Добавил выгрузку погоды1" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавил выгрузку погоды1" />
   </component>
 </project>
