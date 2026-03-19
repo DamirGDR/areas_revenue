@@ -1570,6 +1570,7 @@ def main():
         #     print(city_id)
 
     df_cities_weather.to_sql("t_cities_weather", engine_postgresql, if_exists="append", index=False)
+    print('Таблица t_cities_weather успешно обновлена!')
     # Выгрузка погоды. Конец
 
 if __name__ == "__main__":

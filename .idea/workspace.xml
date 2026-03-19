@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил t_rebalance_sum_avg_rides_2w">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Добавил выгрузку погоды">
       <change beforePath="$PROJECT_DIR$/entrypoint.py" beforeDir="false" afterPath="$PROJECT_DIR$/entrypoint.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -202,7 +200,14 @@
       <option name="project" value="LOCAL" />
       <updated>1773385081351</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Добавил выгрузку погоды">
+      <created>1773930632114</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1773930632114</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -237,6 +242,7 @@
     <MESSAGE value="Добавил open_app к area_revenue" />
     <MESSAGE value="Добавил t_area_plan" />
     <MESSAGE value="Добавил t_rebalance_sum_avg_rides_2w" />
-    <option name="LAST_COMMIT_MESSAGE" value="Добавил t_rebalance_sum_avg_rides_2w" />
+    <MESSAGE value="Добавил выгрузку погоды" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавил выгрузку погоды" />
   </component>
 </project>
