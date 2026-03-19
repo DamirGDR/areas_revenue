@@ -1,6 +1,6 @@
 import os
 import json
-
+import requests
 import pandas as pd
 import sqlalchemy as sa
 import google.oauth2.service_account
@@ -9,6 +9,9 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import polyline
 from shapely.geometry import Point, Polygon
+import openmeteo_requests
+import requests_cache
+from retry_requests import retry
 
 
 # Секреты MySQL
@@ -1525,6 +1528,49 @@ def main():
                                            index=False)
     print('Таблица t_rebalance_sum_avg_rides_2w успешно обновлена!')
     # Обновление t_rebalance_sum_avg_rides_2w. Конец
+
+    # Выгрузка погоды. Начало
+    select_cities_weather = '''
+        SELECT 
+            NOW() + INTERVAL '2 hours' AS add_time ,
+            tc.id AS city_id ,
+            tc."name" AS city ,
+            tc.area_lat ,
+            tc.area_lng ,
+            0 AS current_temperature_2m ,
+            0 AS current_relative_humidity_2m ,
+            0 AS current_precipitation
+        FROM damir.t_city tc  
+    '''
+    df_cities_weather = pd.read_sql(select_cities_weather, engine_postgresql)
+
+    # Setup the Open-Meteo API client with cache and retry on error
+    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+    retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+    openmeteo = openmeteo_requests.Client(session=retry_session)
+
+    for city_id in df_cities_weather['city_id']:
+        # Make sure all required weather variables are listed here
+        # The order of variables in hourly or daily is important to assign them correctly below
+        url = "https://api.open-meteo.com/v1/forecast"
+
+        params = {
+            "latitude": df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'area_lat'].iloc[0],
+            "longitude": df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'area_lng'].iloc[0],
+            "current": ["temperature_2m", "relative_humidity_2m", "precipitation"],
+        }
+        responses = openmeteo.weather_api(url, params=params)
+        response = responses[0]
+        current = response.Current()
+        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_temperature_2m'] = round(
+            current.Variables(0).Value(), 2)
+        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_relative_humidity_2m'] = current.Variables(
+            1).Value()
+        df_cities_weather.loc[(df_cities_weather['city_id'] == city_id), 'current_precipitation'] = current.Variables(2).Value()
+        #     print(city_id)
+
+    df_cities_weather.to_sql("t_cities_weather", engine_postgresql, if_exists="append", index=False)
+    # Выгрузка погоды. Конец
 
 if __name__ == "__main__":
     main()

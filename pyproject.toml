@@ -17,5 +17,9 @@ dependencies = [
     "packaging",
     "datetime",
     "polyline==2.0.2",
-    "shapely==2.0.6"
+    "shapely==2.0.6",
+    "requests",
+    "openmeteo_requests",
+    "requests_cache",
+    "retry_requests"
 ]
