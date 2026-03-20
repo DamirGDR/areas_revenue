@@ -1570,7 +1570,7 @@ def main():
             float(current.Variables(2).Value()), 2)
     # df_cities_weather['current_precipitation'] = df_cities_weather['current_precipitation'].astype(float)
     # df_cities_weather['current_precipitation'] = df_cities_weather['current_temperature_2m'].astype(float)
-
+    df_cities_weather = df_cities_weather.drop(columns=['area_lat', 'area_lng'])
     df_cities_weather.to_sql("t_cities_weather", engine_postgresql, if_exists="append", index=False)
     print('Таблица t_cities_weather успешно обновлена!')
     # Выгрузка погоды. Конец
