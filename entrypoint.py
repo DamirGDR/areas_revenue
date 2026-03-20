@@ -1537,9 +1537,9 @@ def main():
             tc."name" AS city ,
             tc.area_lat ,
             tc.area_lng ,
-            0 AS current_temperature_2m ,
-            0 AS current_relative_humidity_2m ,
-            0 AS current_precipitation
+            0::float AS current_temperature_2m ,
+            0::float AS current_relative_humidity_2m ,
+            0::float AS current_precipitation
         FROM damir.t_city tc  
     '''
     df_cities_weather = pd.read_sql(select_cities_weather, engine_postgresql)
