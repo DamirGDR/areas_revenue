@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Обновление за 1 прошлый день в t_area_open_app_history" />
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Обновление за 1 прошлый день в t_area_open_app_history - 1">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -247,7 +249,14 @@
       <option name="project" value="LOCAL" />
       <updated>1774442875622</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="Обновление за 1 прошлый день в t_area_open_app_history - 1">
+      <created>1774443519090</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1774443519090</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -262,7 +271,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Выгрузка -&gt; Удаление -&gt; Загрузка" />
     <MESSAGE value="Преобразование типов" />
     <MESSAGE value="Преобразование типов1" />
     <MESSAGE value="Убрал" />
@@ -287,6 +295,7 @@
     <MESSAGE value="Добавил float в погоду" />
     <MESSAGE value="drop(columns=['area_lat', 'area_lng'])" />
     <MESSAGE value="Обновление за 1 прошлый день в t_area_open_app_history" />
-    <option name="LAST_COMMIT_MESSAGE" value="Обновление за 1 прошлый день в t_area_open_app_history" />
+    <MESSAGE value="Обновление за 1 прошлый день в t_area_open_app_history - 1" />
+    <option name="LAST_COMMIT_MESSAGE" value="Обновление за 1 прошлый день в t_area_open_app_history - 1" />
   </component>
 </project>

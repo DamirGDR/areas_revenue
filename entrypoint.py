@@ -606,41 +606,55 @@ def main():
     # Загрузка в t_area_open_app_history. Начало
 
     select_app_open = '''
+        WITH user_orders AS (
+            SELECT
+                to_timestamp(tbu."date")::date AS date_of_orders ,
+                --tbu."date" ,
+                array_agg(tbu.uid) AS uids
+            FROM damir.t_bike_use tbu 
+            WHERE tbu.ride_status!=5
+                AND tbu."date" >= extract(epoch from (date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days'))
+            GROUP BY to_timestamp(tbu."date")::date
+        )
         SELECT 
             date_trunc('hour', res.created) AS timestamp_hour,
             res.city_id ,
             res.id ,
+            res.user_id ,
             res.open_lat AS lat ,
             res.open_lng AS lng
         FROM 
-        (
-            SELECT 
+        (	SELECT 
+                --taul.created::date AS created_date,
                 taul.created ,
                 taul.lat AS open_lat,
                 taul.lng AS open_lng,
                 taul.id ,
+                taul.user_id ,
+                --user_orders.uids 
                 ta.city_id ,
-                --ta.id AS parking_id ,
-                --ta."name" AS parking_name ,
-                ta.lat ,
-                ta.lng ,
-                6371000 * acos(
-                                cos(radians(taul.lat)) * 
-                                cos(radians(ta.lat)) * 
-                                cos(radians(ta.lng) - radians(taul.lng)) + 
-                                sin(radians(taul.lat)) * 
-                                sin(radians(ta.lat))) AS distance ,
-                RANK() OVER (PARTITION BY taul.id ORDER BY 6371000 * acos(
-                                                                    cos(radians(taul.lat)) * 
-                                                                    cos(radians(ta.lat)) * 
-                                                                    cos(radians(ta.lng) - radians(taul.lng)) + 
-                                                                    sin(radians(taul.lat)) * 
-                                                                    sin(radians(ta.lat)))
-                                                                        ) AS rn
-            FROM damir.t_audit_user_location taul 
+                    --ta.id AS parking_id ,
+                    --ta."name" AS parking_name ,
+                    ta.lat ,
+                    ta.lng ,
+                    6371000 * acos(
+                                    cos(radians(taul.lat)) * 
+                                    cos(radians(ta.lat)) * 
+                                    cos(radians(ta.lng) - radians(taul.lng)) + 
+                                    sin(radians(taul.lat)) * 
+                                    sin(radians(ta.lat))) AS distance ,
+                    RANK() OVER (PARTITION BY taul.id ORDER BY 6371000 * acos(
+                                                                        cos(radians(taul.lat)) * 
+                                                                        cos(radians(ta.lat)) * 
+                                                                        cos(radians(ta.lng) - radians(taul.lng)) + 
+                                                                        sin(radians(taul.lat)) * 
+                                                                        sin(radians(ta.lat)))
+                                                                            ) AS rn
+            FROM damir.t_audit_user_location taul
+            LEFT JOIN user_orders ON taul.created::date = user_orders.date_of_orders
             CROSS JOIN damir.t_area ta
             WHERE taul.created >= date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days'
-            --WHERE taul.created >= date_trunc('hour', NOW()) - INTERVAL '3 hours'
+                AND taul.user_id != ANY(user_orders.uids)
                 AND ta.active = 1
             ) AS res
         WHERE res.rn = 1
