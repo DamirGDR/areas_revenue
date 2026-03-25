@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="drop(columns=['area_lat', 'area_lng'])">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="89125ab5-c46e-4dd4-9b46-4227f6d4b97d" name="Changes" comment="Обновление за 1 прошлый день в t_area_open_app_history" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -26,7 +24,7 @@
     "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/rimad/Desktop/MOOW/la/VNI_total/git",
+    "last_opened_file_path": "C:/Users/rimad/Desktop/MOOW/la/areas_revenue/git",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
@@ -242,7 +240,14 @@
       <option name="project" value="LOCAL" />
       <updated>1774016895727</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="Обновление за 1 прошлый день в t_area_open_app_history">
+      <created>1774442875622</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1774442875622</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -257,7 +262,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Добавил t_last_kvt для Rebalance" />
     <MESSAGE value="Выгрузка -&gt; Удаление -&gt; Загрузка" />
     <MESSAGE value="Преобразование типов" />
     <MESSAGE value="Преобразование типов1" />
@@ -282,6 +286,7 @@
     <MESSAGE value="Добавил округление1" />
     <MESSAGE value="Добавил float в погоду" />
     <MESSAGE value="drop(columns=['area_lat', 'area_lng'])" />
-    <option name="LAST_COMMIT_MESSAGE" value="drop(columns=['area_lat', 'area_lng'])" />
+    <MESSAGE value="Обновление за 1 прошлый день в t_area_open_app_history" />
+    <option name="LAST_COMMIT_MESSAGE" value="Обновление за 1 прошлый день в t_area_open_app_history" />
   </component>
 </project>

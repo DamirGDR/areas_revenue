@@ -639,7 +639,7 @@ def main():
                                                                         ) AS rn
             FROM damir.t_audit_user_location taul 
             CROSS JOIN damir.t_area ta
-            WHERE taul.created >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '1 days'
+            WHERE taul.created >= date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days'
             --WHERE taul.created >= date_trunc('hour', NOW()) - INTERVAL '3 hours'
                 AND ta.active = 1
             ) AS res
@@ -664,7 +664,7 @@ def main():
 
     truncate_t_area_open_app_history = '''
         DELETE FROM damir.t_area_open_app_history
-        WHERE damir.t_area_open_app_history."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '1 days';
+        WHERE damir.t_area_open_app_history."timestamp_hour" >= date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days';
         '''
     with engine_postgresql.connect() as connection:
         with connection.begin() as transaction:
