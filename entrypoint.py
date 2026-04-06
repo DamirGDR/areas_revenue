@@ -534,10 +534,10 @@ def main():
     # Загрузка в t_area_kvt_history. Начало
     select_kvt = '''
         SELECT 
-            NOW() + INTERVAL '2 hours' AS "timestamp" ,
+            NOW() AT TIME ZONE 'Europe/Athens' AS "timestamp" ,
             --tb."timestamp" ,
             --date_trunc('hour', tb."timestamp") AS "timestamp_hour" ,
-            date_trunc('hour', (NOW() + INTERVAL '2 hours')) AS "timestamp_hour" ,
+            date_trunc('hour', (NOW() AT TIME ZONE 'Europe/Athens')) AS "timestamp_hour" ,
             --tb."timestamp" ,
             --date_trunc('hour', tb."timestamp") AS "timestamp_hour" ,
             tb.id ,
@@ -587,7 +587,7 @@ def main():
     # Очистка таблицы
     truncate_area_kvt_history = '''
         DELETE FROM damir.t_area_kvt_history takh
-        WHERE takh."timestamp_hour" >= date_trunc('hour', (NOW() + INTERVAL '2 hours'));
+        WHERE takh."timestamp_hour" >= date_trunc('hour', (NOW() AT TIME ZONE 'Europe/Athens'));
     '''
 
     with engine_postgresql.connect() as connection:
@@ -613,7 +613,7 @@ def main():
                 array_agg(tbu.uid) AS uids
             FROM damir.t_bike_use tbu 
             WHERE tbu.ride_status!=5
-                AND tbu."date" >= extract(epoch from (date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days'))
+                AND tbu."date" >= extract(epoch from (date_trunc('day', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '1 days'))
             GROUP BY to_timestamp(tbu."date")::date
         )
         SELECT 
@@ -653,7 +653,7 @@ def main():
             FROM damir.t_audit_user_location taul
             LEFT JOIN user_orders ON taul.created::date = user_orders.date_of_orders
             CROSS JOIN damir.t_area ta
-            WHERE taul.created >= date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days'
+            WHERE taul.created >= date_trunc('day', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '1 days'
                 AND taul.user_id != ANY(user_orders.uids)
                 AND ta.active = 1
             ) AS res
@@ -678,7 +678,7 @@ def main():
 
     truncate_t_area_open_app_history = '''
         DELETE FROM damir.t_area_open_app_history
-        WHERE damir.t_area_open_app_history."timestamp_hour" >= date_trunc('day', NOW() + INTERVAL '2 hours') - INTERVAL '1 days';
+        WHERE damir.t_area_open_app_history."timestamp_hour" >= date_trunc('day', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '1 days';
         '''
     with engine_postgresql.connect() as connection:
         with connection.begin() as transaction:
@@ -767,7 +767,7 @@ def main():
             tor.subscription_price 
         FROM damir.t_orders_revenue tor 
         LEFT JOIN damir.t_bike tb ON tor.bid = tb.id
-        WHERE tor."timestamp" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+        WHERE tor."timestamp" >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
     '''
 
     df_orders = pd.read_sql(select_orders, engine_postgresql)
@@ -815,7 +815,7 @@ def main():
                     FROM damir.t_bike_use tbu
                     LEFT JOIN t_bike tb ON tbu.bid = tb.id
                     WHERE tbu.ride_status = 2 
-                        AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+                        AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                         --AND to_timestamp( tbu.start_time) >= '2025-12-18'::date
                     ) AS dolgi ON tpd.ride_id = dolgi.id 
                 ) AS dolgi
@@ -842,7 +842,7 @@ def main():
                     FROM damir.t_bike_use
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
-                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
                     GROUP BY 1, 2
                     ) 
@@ -855,7 +855,7 @@ def main():
                 FROM damir.t_trade
                 WHERE t_trade.type = 6 
                     AND t_trade.status = 1 
-                    AND t_trade.date >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+                    AND t_trade.date >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                     --AND t_trade.date >= '2025-12-18'::date
                 GROUP BY 1
                 ) AS sum_uspeh_abon
@@ -880,7 +880,7 @@ def main():
                     FROM damir.t_bike_use
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
-                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
                     GROUP BY 1, 2
                 ) AS dp
@@ -892,7 +892,7 @@ def main():
                 FROM damir.t_subscription_mapping
                 LEFT JOIN damir.t_subscription ON t_subscription_mapping.subscription_id = t_subscription.id
                 WHERE 
-                    t_subscription_mapping.start_time >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
+                    t_subscription_mapping.start_time >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                     --t_subscription_mapping.start_time >= '2025-12-18'::date 
                 GROUP BY 1
             ) AS sum_mnogor_abon
@@ -961,7 +961,7 @@ def main():
 
     truncate_t_area_revenue_stats2 = '''
         DELETE FROM damir.t_area_revenue_stats2
-        WHERE damir.t_area_revenue_stats2."timestamp_hour" >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours';
+        WHERE damir.t_area_revenue_stats2."timestamp_hour" >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours';
         '''
     with engine_postgresql.connect() as connection:
         with connection.begin() as transaction:
@@ -1047,7 +1047,7 @@ def main():
             takh.area_name ,
             ROUND(AVG(takh.kvt)) AS kvt
         FROM damir.t_area_kvt_history takh
-        WHERE takh.timestamp_hour >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+        WHERE takh.timestamp_hour >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
         -- WHERE takh.timestamp_hour >= date_trunc('day', (NOW())) - INTERVAL '1 days'
         GROUP BY takh.timestamp_hour::date , takh.city_id , takh.area_id , takh.area_name
         ORDER BY takh.timestamp_hour::date ASC
@@ -1063,7 +1063,7 @@ def main():
             taoah.area_name ,
             SUM(taoah.open_app) AS open_app
         FROM damir.t_area_open_app_history taoah 
-        WHERE taoah.timestamp_hour >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+        WHERE taoah.timestamp_hour >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
         -- WHERE taoah.timestamp_hour >= date_trunc('day', (NOW())) - INTERVAL '1 days'
         GROUP BY taoah.timestamp_hour::date , taoah.city_id , taoah.area_id , taoah.area_name
         ORDER BY taoah.timestamp_hour::date ASC
@@ -1158,7 +1158,7 @@ def main():
                     LEFT JOIN t_bike tb ON tbu.bid = tb.id
                     WHERE tbu.ride_status = 2 
                         --AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                        AND to_timestamp( tbu.start_time) >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+                        AND to_timestamp( tbu.start_time) >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                     ) AS dolgi ON tpd.ride_id = dolgi.id
                 ) AS dolgi 
             GROUP BY dolgi.timestamp_day , dolgi.city_id
@@ -1186,7 +1186,7 @@ def main():
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                     GROUP BY 1, 2
                     ) AS distr_poezdki_po_gorodam
             ) AS distr_poezdki_po_gorodam
@@ -1198,7 +1198,7 @@ def main():
                 WHERE t_trade.type = 6 
                     AND t_trade.status = 1 
                     --AND t_trade.date >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                    AND t_trade.date >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+                    AND t_trade.date >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                 GROUP BY 1
                 ) AS sum_uspeh_abon
                 ON distr_poezdki_po_gorodam.start_time = sum_uspeh_abon.start_time
@@ -1224,7 +1224,7 @@ def main():
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days'
+                        AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                     GROUP BY 1, 2
                 ) AS dp
             ) AS distr_poezdki_po_gorodam
@@ -1236,7 +1236,7 @@ def main():
                 LEFT JOIN damir.t_subscription ON t_subscription_mapping.subscription_id = t_subscription.id
                 WHERE 
                     --t_subscription_mapping.start_time >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
-                    t_subscription_mapping.start_time >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days' 
+                    t_subscription_mapping.start_time >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days' 
                     GROUP BY 1
                 ) AS sum_mnogor_abon
                 ON distr_poezdki_po_gorodam.start_time = sum_mnogor_abon.start_time
@@ -1312,7 +1312,7 @@ def main():
 
     truncate_t_area_revenue_stats3 = '''
         DELETE FROM damir.t_area_revenue_stats3
-        WHERE damir.t_area_revenue_stats3."timestamp_hour" >= date_trunc('day', (NOW() + INTERVAL '2 hours')) - INTERVAL '1 days';
+        WHERE damir.t_area_revenue_stats3."timestamp_hour" >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days';
         '''
     with engine_postgresql.connect() as connection:
         with connection.begin() as transaction:
@@ -1410,7 +1410,7 @@ def main():
             ROUND(COALESCE(AVG(dtprs.poezdok) FILTER (WHERE (EXTRACT(HOUR FROM dtprs."timestamp") IN (18,19,20,21,22,23,0,1,2,3,4,5)) AND (EXTRACT(DOW FROM dtprs."timestamp") IN (1,2,3,4,5))), 0)) AS target_scooter_count_workday_18_to_6 ,
             ROUND(COALESCE(AVG(dtprs.poezdok) FILTER (WHERE EXTRACT(DOW FROM dtprs."timestamp") IN (6,7)), 0)) AS target_scooter_count_weekend
         FROM damir.t_parking_revenue_stats1 dtprs
-        WHERE dtprs."timestamp"::date >= (NOW() + INTERVAL '2 HOURS')::date - INTERVAL '13 DAY'
+        WHERE dtprs."timestamp"::date >= (NOW() AT TIME ZONE 'Europe/Athens')::date - INTERVAL '13 DAY'
         --WHERE dtprs."timestamp"::date >= (NOW())::date - INTERVAL '13 DAY'
         GROUP BY dtprs.parking_id
         ORDER BY dtprs.parking_id ASC
@@ -1475,13 +1475,13 @@ def main():
                     --SUM(SUM(tars.poezdok ) OVER (PARTITION BY tars.city_id ORDER BY tars.timestamp_hour RANGE BETWEEN '13 days' PRECEDING AND CURRENT ROW)) AS poezdok_2w_city
                 FROM damir.t_area_revenue_stats3 tars
                 --WHERE tars.timestamp_hour >= (NOW()::date) - INTERVAL '16 days'
-                WHERE tars.timestamp_hour >= ((NOW() + INTERVAL '2 hours')::date) - INTERVAL '18 days'
+                WHERE tars.timestamp_hour >= ((NOW() AT TIME ZONE 'Europe/Athens')::date) - INTERVAL '18 days'
                 --GROUP BY tars.timestamp_hour::date , tars.city_id , tars.area_id , tars.area_name 
             ) AS res
             ORDER BY res.timestamp_hour DESC
         ) AS res
         --WHERE res.timestamp_hour = NOW()::date
-        WHERE res.timestamp_hour >= (NOW() + INTERVAL '2 hours')::date - INTERVAL '2 day'
+        WHERE res.timestamp_hour >= (NOW() AT TIME ZONE 'Europe/Athens')::date - INTERVAL '2 day'
         ORDER BY res.timestamp_hour , res.city_id , res.area_id
     '''
     df_t_area_plan = pd.read_sql(select_t_area_plan, engine_postgresql)
@@ -1489,7 +1489,7 @@ def main():
     # Очистка таблицы
     delete_t_last_kvt = '''
             DELETE FROM damir.t_area_plan
-            WHERE damir.t_area_plan."timestamp_hour" >= (NOW() + INTERVAL '2 hours')::date - INTERVAL '2 day';
+            WHERE damir.t_area_plan."timestamp_hour" >= (NOW() AT TIME ZONE 'Europe/Athens')::date - INTERVAL '2 day';
     '''
     with engine_postgresql.connect() as connection:
         with connection.begin() as transaction:
@@ -1522,7 +1522,7 @@ def main():
             ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (17,18,19,20,21)), 0)) AS poezdok_2w
         FROM damir.t_parking_revenue_stats1 tprs 
         --WHERE tprs."timestamp" >= NOW()::date - INTERVAL '14 days'
-        WHERE tprs."timestamp" >= (NOW() + INTERVAL '2 hours')::date - INTERVAL '14 days'
+        WHERE tprs."timestamp" >= (NOW() AT TIME ZONE 'Europe/Athens')::date - INTERVAL '14 days'
         GROUP BY tprs.parking_id
         ORDER BY tprs.parking_id
     '''
@@ -1546,7 +1546,7 @@ def main():
     # Выгрузка погоды. Начало
     select_cities_weather = '''
         SELECT 
-            NOW() + INTERVAL '2 hours' AS add_time ,
+            NOW() AT TIME ZONE 'Europe/Athens' AS add_time ,
             tc.id AS city_id ,
             tc."name" AS city ,
             tc.area_lat ,
