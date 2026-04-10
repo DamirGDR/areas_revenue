@@ -1346,6 +1346,13 @@ def main():
                     ta."name" ,
                     ta.lat ,
                     ta.lng ,
+                    acos(
+                        cos(radians(tb.g_lat)) * 
+                        cos(radians(ta.lat)) * 
+                        cos(radians(ta.lng) - radians(tb.g_lng)) + 
+                        sin(radians(tb.g_lat)) * 
+                        sin(radians(ta.lat))
+                        ) AS distance ,
                     RANK() OVER (PARTITION BY tb.id ORDER BY 6371000 * acos(
                                                                             cos(radians(tb.g_lat)) * 
                                                                             cos(radians(ta.lat)) * 
@@ -1358,6 +1365,7 @@ def main():
                     AND ta.active = 1
                 ) AS res
             WHERE res.rn = 1
+                AND res.distance <= 15
             GROUP BY res.city_id , res.parking_id , res."name"
         ),
         parking_all AS (
@@ -1369,7 +1377,7 @@ def main():
             WHERE ta.active = 1
         )
         SELECT
-            NOW() AS add_time ,
+            NOW() AT TIME ZONE 'Europe/Athens' AS add_time ,
             COALESCE(kvt.city_id , parking_all.city_id) AS city_id,
             COALESCE(tap.area_id, 0) AS area_id,
             COALESCE(tap.area_name, '0') AS area_name,
