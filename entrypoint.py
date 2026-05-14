@@ -613,6 +613,7 @@ def main():
                 array_agg(tbu.uid) AS uids
             FROM damir.t_bike_use tbu 
             WHERE tbu.ride_status!=5
+                AND tbu.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
                 AND tbu."date" >= extract(epoch from (date_trunc('day', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '1 days'))
             GROUP BY to_timestamp(tbu."date")::date
         )
@@ -656,6 +657,7 @@ def main():
             WHERE taul.created >= date_trunc('day', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '1 days'
                 AND taul.user_id != ANY(user_orders.uids)
                 AND ta.active = 1
+                AND taul.user_id NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
             ) AS res
         WHERE res.rn = 1
     '''
@@ -815,6 +817,7 @@ def main():
                     FROM damir.t_bike_use tbu
                     LEFT JOIN t_bike tb ON tbu.bid = tb.id
                     WHERE tbu.ride_status = 2 
+                        AND tbu.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
                         AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                         --AND to_timestamp( tbu.start_time) >= '2025-12-18'::date
                     ) AS dolgi ON tpd.ride_id = dolgi.id 
@@ -842,6 +845,7 @@ def main():
                     FROM damir.t_bike_use
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
+                        AND t_bike_use.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
                         AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
                     GROUP BY 1, 2
@@ -855,6 +859,7 @@ def main():
                 FROM damir.t_trade
                 WHERE t_trade.type = 6 
                     AND t_trade.status = 1 
+                    AND t_trade.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
                     AND t_trade.date >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                     --AND t_trade.date >= '2025-12-18'::date
                 GROUP BY 1
@@ -880,6 +885,7 @@ def main():
                     FROM damir.t_bike_use
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
+                        AND t_bike_use.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
                         AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= '2025-12-18'::date
                     GROUP BY 1, 2
@@ -893,6 +899,7 @@ def main():
                 LEFT JOIN damir.t_subscription ON t_subscription_mapping.subscription_id = t_subscription.id
                 WHERE 
                     t_subscription_mapping.start_time >= date_trunc('hour', NOW() AT TIME ZONE 'Europe/Athens') - INTERVAL '2 hours'
+                    AND t_subscription_mapping.user_id NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094) 
                     --t_subscription_mapping.start_time >= '2025-12-18'::date 
                 GROUP BY 1
             ) AS sum_mnogor_abon
@@ -1092,6 +1099,7 @@ def main():
         LEFT JOIN shamri.t_subscription ts ON tbu.subscription_id = ts.id 
         LEFT JOIN shamri.t_bike tb ON tb.id = tbu.bid
         WHERE tbu.ride_status != 5
+             AND tbu.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094)
              AND 
             -- from_unixtime(tbu.`date`) >= STR_TO_DATE(DATE_FORMAT(NOW(), '%Y-%m-%d %H:00:00'), "%Y-%m-%d %H:%i:%s") - INTERVAL 2 HOUR
              tbu.`date` >= UNIX_TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY))
@@ -1157,6 +1165,7 @@ def main():
                     FROM damir.t_bike_use tbu
                     LEFT JOIN t_bike tb ON tbu.bid = tb.id
                     WHERE tbu.ride_status = 2 
+                        AND tbu.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094) 
                         --AND to_timestamp( tbu.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
                         AND to_timestamp( tbu.start_time) >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                     ) AS dolgi ON tpd.ride_id = dolgi.id
@@ -1185,6 +1194,7 @@ def main():
                     FROM damir.t_bike_use
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
+                        AND t_bike_use.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094) 
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
                         AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                     GROUP BY 1, 2
@@ -1196,6 +1206,7 @@ def main():
                     SUM(COALESCE(t_trade.amount, 0)) AS vyruchka_s_abonementov
                 FROM damir.t_trade
                 WHERE t_trade.type = 6 
+                    AND t_trade.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094) 
                     AND t_trade.status = 1 
                     --AND t_trade.date >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
                     AND t_trade.date >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
@@ -1223,6 +1234,7 @@ def main():
                     FROM damir.t_bike_use
                     LEFT JOIN damir.t_bike ON t_bike_use.bid = t_bike.id
                     WHERE t_bike_use.ride_status != 5 
+                        AND t_bike_use.uid NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094) 
                         --AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
                         AND TO_TIMESTAMP(t_bike_use.start_time) >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days'
                     GROUP BY 1, 2
@@ -1237,6 +1249,7 @@ def main():
                 WHERE 
                     --t_subscription_mapping.start_time >= date_trunc('hour', NOW() + INTERVAL '2 hours') - INTERVAL '2 hours'
                     t_subscription_mapping.start_time >= date_trunc('day', (NOW() AT TIME ZONE 'Europe/Athens')) - INTERVAL '1 days' 
+                    AND t_subscription_mapping.user_id NOT IN (52536,58249,72860,37592,63824,49704,54187,70354,70408,49618,72907,70404,44902,45094) 
                     GROUP BY 1
                 ) AS sum_mnogor_abon
                 ON distr_poezdki_po_gorodam.start_time = sum_mnogor_abon.start_time
