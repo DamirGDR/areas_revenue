@@ -1528,22 +1528,20 @@ def main():
     # Копирую t_rebalance_sum_avg_rides_2w
     select_t_rebalance_sum_avg_rides_2w = '''
         SELECT
-            --EXTRACT(HOUR FROM tprs."timestamp") ,
-            --tprs."timestamp"::date ,
-            --tprs.city_id ,
             NOW() AS add_time ,
             tprs.parking_id ,
+            --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (2,3,4,5,0,1,22,23)), 0)) AS "22:00-05:59" , 
             --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (6,7,8,9,10,11,12)), 0)) AS "06:00-12:59" ,
             --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (13,14,15,16)), 0)) AS "13:00-16:59" ,
             --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (17,18,19,20,21)), 0)) AS "17:00-21:59" ,
-            --ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (2,3,4,5,0,1,22,23)), 0)) AS "22:00-01:59 + 02:00-05:59" ,
             ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (2,3,4,5,0,1,22,23)), 0)) + 
             ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (6,7,8,9,10,11,12)), 0)) + 
             ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (13,14,15,16)), 0)) + 
             ROUND(COALESCE(AVG(tprs.poezdok) FILTER (WHERE EXTRACT(HOUR FROM tprs."timestamp") IN (17,18,19,20,21)), 0)) AS poezdok_2w
-        FROM damir.t_parking_revenue_stats1 tprs 
-        --WHERE tprs."timestamp" >= NOW()::date - INTERVAL '14 days'
-        WHERE tprs."timestamp" >= (NOW() AT TIME ZONE 'Europe/Athens')::date - INTERVAL '14 days'
+        FROM damir.t_parking_revenue_stats2 tprs 
+        WHERE tprs."timestamp" >= (NOW() AT TIME ZONE 'Europe/Athens' - INTERVAL '14 days')::date
+            AND tprs."timestamp" <= (NOW() AT TIME ZONE 'Europe/Athens' - INTERVAL  '1 days')::date
+            --AND tprs.city_id = 14
         GROUP BY tprs.parking_id
         ORDER BY tprs.parking_id
     '''
