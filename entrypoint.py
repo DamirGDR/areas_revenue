@@ -507,11 +507,10 @@ def poly_contains_point_orders(df):
     res = area_poly.contains(start_point)
     return res
 
-def poly_contains_point_open_app(df):
-    start_point = Point(df['lat'], df['lng'])
-    area_poly = Polygon(df['area_poly'])
-    res = area_poly.contains(start_point)
-    return res
+def poly_contains_point_open_app(row):
+    start_point = Point(row['open_lat'], row['open_lng'])
+    area_poly = Polygon(row['area_poly'])
+    return bool(area_poly.contains(start_point))
 
 def main():
 
@@ -663,11 +662,12 @@ def main():
     '''
 
     df_app_open = pd.read_sql(select_app_open, engine_postgresql)
+    df_app_open = df_app_open.rename(columns={'lat': 'open_lat', 'lng': 'open_lng'})
 
     # Соединяю открытия приложения и area
     df_app_open_area = df_app_open.merge(df_areas, how='cross')
 
-    df_app_open_area['res'] = df_app_open_area.apply(poly_contains_point_open_app, axis=1)
+    df_app_open_area['res'] = df_app_open_area.apply(poly_contains_point_open_app, axis=1, result_type='reduce')
     df_app_open_area = df_app_open_area[df_app_open_area['res'] == True]
     df_app_open_res = df_app_open[['timestamp_hour', 'city_id', 'id']].merge(
         df_app_open_area[['area_id', 'area_name', 'id']], on='id', how='left')
