@@ -495,17 +495,15 @@ def poly_contains(df):
     res = Polygon(a).contains(Polygon(b))
     return res
 
-def poly_contains_point_kvt(df):
-    start_point = Point(df['g_lat'], df['g_lng'])
-    area_poly = Polygon(df['area_poly'])
-    res = area_poly.contains(start_point)
-    return res
+def poly_contains_point_kvt(row):
+    start_point = Point(row['g_lat'], row['g_lng'])
+    area_poly = Polygon(row['area_poly'])
+    return bool(area_poly.contains(start_point))
 
-def poly_contains_point_orders(df):
-    start_point = Point(df['start_lat'], df['start_lng'])
-    area_poly = Polygon(df['area_poly'])
-    res = area_poly.contains(start_point)
-    return res
+def poly_contains_point_orders(row):
+    start_point = Point(row['start_lat'], row['start_lng'])
+    area_poly = Polygon(row['area_poly'])
+    return bool(area_poly.contains(start_point))
 
 def poly_contains_point_open_app(row):
     start_point = Point(row['open_lat'], row['open_lng'])
@@ -567,7 +565,7 @@ def main():
     df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
 
     df_kvt_area = df_kvt.merge(df_areas, how='cross')
-    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
+    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1, result_type='reduce')
 
     df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
 
@@ -741,7 +739,7 @@ def main():
     df_areas['area_poly'] = df_areas['area_detail'].apply(decode_polyline_to_tuples)
 
     df_kvt_area = df_kvt.merge(df_areas, how='cross')
-    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1)
+    df_kvt_area['res'] = df_kvt_area.apply(poly_contains_point_kvt, axis=1, result_type='reduce')
     df_kvt_area_res = df_kvt_area[df_kvt_area['res'] == True]
     df_kvt_area_res = df_kvt_area_res.drop(
         columns=['timestamp', 'city_id', 'g_lat', 'g_lng', 'area_detail', 'area_poly', 'res'])
@@ -775,7 +773,7 @@ def main():
     df_orders = pd.read_sql(select_orders, engine_postgresql)
     # Соединяю orders и area
     df_orders_area = df_orders.merge(df_areas, how='cross')
-    df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1)
+    df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1, result_type='reduce')
     df_orders_area = df_orders_area[df_orders_area['res'] == True]
     df_orders_area = df_orders_area.drop(
         columns=['city_id', 'start_lat', 'start_lng', 'ride_amount', 'discount', 'bike_discount_amount',
@@ -1111,7 +1109,7 @@ def main():
 
     # Соединяю orders и area
     df_orders_area = df_orders.merge(df_areas, how='cross')
-    df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1)
+    df_orders_area['res'] = df_orders_area.apply(poly_contains_point_orders, axis=1, result_type='reduce')
     df_orders_area = df_orders_area[df_orders_area['res'] == True]
     df_orders_area = df_orders_area.drop(
         columns=['city_id', 'start_lat', 'start_lng', 'ride_amount', 'discount', 'bike_discount_amount',
